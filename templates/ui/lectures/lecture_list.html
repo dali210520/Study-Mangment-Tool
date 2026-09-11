@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Vorlesungen | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Module & Vorlesungen</p>
+        <h1>Vorlesungen</h1>
+        <p class="muted">Alle Vorlesungstermine aus deinen Modulen in einer Liste.</p>
+    </div>
+    <div class="page-actions">
+        <a class="secondary-button" href="{% url 'ui-module-list' %}">Module anzeigen</a>
+    </div>
+</div>
+
+<form class="toolbar" method="get">
+    <label class="toolbar-search">
+        <span aria-hidden="true">S</span>
+        <input type="search" name="q" value="{{ query }}" placeholder="Vorlesungen durchsuchen..." aria-label="Vorlesungen durchsuchen">
+    </label>
+    <button class="secondary-button" type="submit">Suchen</button>
+</form>
+
+{% if lectures %}
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>Vorlesungsliste</h2>
+            <span class="metric-note">{{ module_count }} Module</span>
+        </div>
+        <div class="table-list">
+            {% for lecture in lectures %}
+                <div class="table-row">
+                    <div class="date-pill">{{ lecture.date|date:"d.m.Y" }}</div>
+                    <div>
+                        <div class="resource-title">{{ lecture.title }}</div>
+                        <div class="resource-meta">{{ lecture.module.name }} - {{ lecture.notes|default:"Keine Notizen"|truncatechars:100 }}</div>
+                    </div>
+                    <div class="resource-actions">
+                        <a class="secondary-button" href="{% url 'ui-module-detail' lecture.module_id %}">Modul</a>
+                        <a class="secondary-button" href="{% url 'ui-lecture-update' lecture.id %}">Bearbeiten</a>
+                        <a class="danger-link" href="{% url 'ui-lecture-delete' lecture.id %}">Löschen</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% else %}
+    <div class="empty-state">Noch keine Vorlesungen gefunden.</div>
+{% endif %}
+{% endblock %}

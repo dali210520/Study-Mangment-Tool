@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Vorlesungen</p>
+        <h1>{{ page_title }}</h1>
+        {% if module %}
+            <p class="muted">Modul: {{ module.name }}</p>
+        {% else %}
+            <p class="muted">Bitte wähle ein Modul aus.</p>
+        {% endif %}
+    </div>
+    <div class="page-actions">
+        {% if module %}
+            <a class="secondary-button" href="{% url 'ui-module-detail' module.id %}">Abbrechen</a>
+        {% else %}
+            <a class="secondary-button" href="{% url 'ui-lecture-list' %}">Abbrechen</a>
+        {% endif %}
+    </div>
+</div>
+
+<form class="form-panel form-grid" method="post">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="field">
+            {{ field.label_tag }}
+            {{ field }}
+            {{ field.errors }}
+        </div>
+    {% endfor %}
+    <div class="form-actions">
+        <button class="action-button" type="submit">{{ submit_label }}</button>
+        {% if module %}
+            <a class="secondary-button" href="{% url 'ui-module-detail' module.id %}">Zurück</a>
+        {% else %}
+            <a class="secondary-button" href="{% url 'ui-lecture-list' %}">Zurück</a>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}
+

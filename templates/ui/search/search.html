@@ -1,0 +1,505 @@
+{% extends "base.html" %}
+
+{% block title %}Suche | Study Management Tool{% endblock %}
+
+{% block content %}
+<style>
+    .search-split-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-top: 20px;
+        align-items: start;
+    }
+
+    @media (min-width: 1024px) {
+        .search-split-layout {
+            grid-template-columns: 350px 1fr;
+        }
+    }
+
+    .search-results-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+    }
+
+    .clickable-row {
+        cursor: pointer;
+        transition: background 0.2s ease, border-left-color 0.2s ease;
+        border-left: 4px solid transparent;
+        padding: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .clickable-row:last-child {
+        border-bottom: none;
+    }
+
+    .clickable-row:hover {
+        background: var(--surface-soft);
+    }
+
+    .clickable-row.active-pdf {
+        background: var(--blue-soft) !important;
+        border-left-color: var(--blue) !important;
+    }
+
+    /* Preview Panel Styles */
+    .preview-panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        position: sticky;
+        top: 90px;
+        min-height: 550px;
+    }
+
+    .preview-header {
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .preview-title-area h2 {
+        font-size: 18px;
+        margin-bottom: 4px;
+        color: var(--text);
+    }
+
+    .preview-meta {
+        font-size: 12px;
+        color: var(--muted);
+    }
+
+    .preview-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--surface-soft);
+        padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+    }
+
+    .preview-nav-btn {
+        background: var(--surface);
+        border: 1px solid var(--border-strong);
+        border-radius: 6px;
+        color: var(--text);
+        cursor: pointer;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .preview-nav-btn:hover:not(:disabled) {
+        background: var(--surface-soft);
+        border-color: var(--blue);
+        color: var(--blue);
+    }
+
+    .preview-nav-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .preview-status {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .pdf-canvas-container {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: #525659;
+        padding: 15px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: auto;
+        max-height: 520px;
+        position: relative;
+    }
+
+    #pdf-render-canvas {
+        max-width: 100%;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        background: white;
+    }
+
+    .preview-placeholder {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 450px;
+        color: var(--muted);
+        text-align: center;
+        gap: 12px;
+    }
+
+    .preview-placeholder-icon {
+        font-size: 48px;
+        opacity: 0.5;
+    }
+
+    .loading-spinner {
+        display: none;
+        position: absolute;
+        font-size: 14px;
+        color: white;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+        z-index: 5;
+    }
+
+    .pill-info {
+        background: var(--blue-soft);
+        color: var(--blue);
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+</style>
+
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Suche</p>
+        <h1>PDF-Suche</h1>
+        <p class="muted">Durchsuche deine PDF-Unterlagen und navigiere direkt zwischen den Treffern im Dokumenten-Vorschaufenster.</p>
+    </div>
+    <div class="page-actions">
+        <a class="secondary-button" href="{% url 'ui-material-list' %}">PDF-Unterlagen</a>
+    </div>
+</div>
+
+<form class="toolbar" method="get">
+    <label class="toolbar-search">
+        <span aria-hidden="true">🔍</span>
+        <input type="search" name="q" id="search-query-field" value="{{ query }}" placeholder="Suchbegriff eingeben..."
+            aria-label="PDF-Inhalte durchsuchen">
+    </label>
+    <select name="module" aria-label="Modul filtern">
+        <option value="">Alle Module</option>
+        {% for module in modules %}
+        <option value="{{ module.id }}" {% if selected_module == module.id|stringformat:"s" %} selected{% endif %}>
+            {{ module.name }}
+        </option>
+        {% endfor %}
+    </select>
+    <button class="action-button" type="submit">Suchen</button>
+</form>
+
+{% if searched %}
+<div class="search-split-layout">
+    <!-- Left panel: Search results list -->
+    <div class="search-results-panel">
+        <div class="panel-heading" style="margin-bottom: 16px;">
+            <h2>Suchergebnisse</h2>
+            <span class="metric-note">{{ results|length }} Treffer</span>
+        </div>
+        
+        {% if results %}
+        <div class="table-list" id="search-results-list">
+            {% for result in results %}
+            <div class="clickable-row" 
+                 data-pdf-url="{{ result.material.file.url }}" 
+                 data-pdf-title="{{ result.material.title }}"
+                 data-pdf-module="{{ result.material.module.name }}"
+                 data-material-id="{{ result.material.id }}">
+                <div style="flex-grow: 1;">
+                    <div class="resource-title" style="font-size: 14px; font-weight: 700; margin-bottom: 2px;">{{ result.material.title }}</div>
+                    <div class="resource-meta" style="font-size: 11px; color: var(--muted);">{{ result.material.module.name }} • {{ result.material.page_count }} Seiten</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">Keine Treffer für deine Suche gefunden.</div>
+        {% endif %}
+    </div>
+
+    <!-- Right panel: Inline PDF search and previewer -->
+    <div class="preview-panel-wrapper">
+        <div class="preview-panel" id="document-preview-panel">
+            <!-- Placeholder state -->
+            <div class="preview-placeholder" id="preview-placeholder">
+                <div class="preview-placeholder-icon">📄</div>
+                <div>
+                    <h3>Wähle ein Suchergebnis</h3>
+                    <p class="muted">Klicke links auf ein PDF, um die Vorschau und Treffer-Navigation zu starten.</p>
+                </div>
+            </div>
+
+            <!-- Active Viewer state (hidden initially) -->
+            <div id="preview-active-content" style="display: none; flex-direction: column; gap: 16px; flex-grow: 1;">
+                <div class="preview-header">
+                    <div class="preview-title-area">
+                        <h2 id="preview-pdf-title">Titel der PDF</h2>
+                        <div class="preview-meta">
+                            <span id="preview-pdf-module" class="pill-info">Modul</span>
+                            <span>• Originaldatei: <a id="preview-original-link" href="#" target="_blank" style="text-decoration: underline; color: var(--blue);">öffnen</a></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="preview-controls">
+                    <button class="preview-nav-btn" id="prev-match-btn">◀ Zurück</button>
+                    <span class="preview-status" id="preview-match-status">Seite 1 von 1 (Treffer 1 von 1)</span>
+                    <button class="preview-nav-btn" id="next-match-btn">Weiter ▶</button>
+                </div>
+
+                <!-- Canvas container with loading spinner -->
+                <div class="pdf-canvas-container">
+                    <div class="loading-spinner" id="canvas-loading-spinner">Wird geladen...</div>
+                    <a id="canvas-link" href="#" target="_blank" style="display: block; cursor: pointer; max-width: 100%; text-align: center;">
+                        <canvas id="pdf-render-canvas" style="cursor: pointer; display: block;"></canvas>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="empty-state">Gib einen Suchbegriff ein, um deine PDF-Inhalte zu durchsuchen.</div>
+{% endif %}
+
+<!-- Load PDF.js from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+<script>
+    // Initialize PDF.js
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const queryVal = "{{ query|escapejs }}".trim();
+        const rows = document.querySelectorAll('#search-results-list .clickable-row');
+        
+        const placeholder = document.getElementById('preview-placeholder');
+        const activeContent = document.getElementById('preview-active-content');
+        const pdfTitle = document.getElementById('preview-pdf-title');
+        const pdfModule = document.getElementById('preview-pdf-module');
+        const originalLink = document.getElementById('preview-original-link');
+        
+        const prevBtn = document.getElementById('prev-match-btn');
+        const nextBtn = document.getElementById('next-match-btn');
+        const matchStatus = document.getElementById('preview-match-status');
+        const canvas = document.getElementById('pdf-render-canvas');
+        const ctx = canvas.getContext('2d');
+        const spinner = document.getElementById('canvas-loading-spinner');
+
+        let currentPdf = null;
+        let matchingPages = []; // List of page objects containing the match: { pageNo, text }
+        let currentMatchIdx = -1; // Index in matchingPages
+        let currentDocIndex = -1; // Current selected row index
+
+        // Clicking on a result row
+        rows.forEach((row, idx) => {
+            row.addEventListener('click', function() {
+                selectDocument(idx);
+            });
+        });
+
+        function selectDocument(docIdx) {
+            if (docIdx < 0 || docIdx >= rows.length) return;
+            
+            // Highlight active row
+            rows.forEach(r => r.classList.remove('active-pdf'));
+            const activeRow = rows[docIdx];
+            activeRow.classList.add('active-pdf');
+            currentDocIndex = docIdx;
+
+            const pdfUrl = activeRow.getAttribute('data-pdf-url');
+            const title = activeRow.getAttribute('data-pdf-title');
+            const module = activeRow.getAttribute('data-pdf-module');
+
+            // Show active viewer container
+            placeholder.style.display = 'none';
+            activeContent.style.display = 'flex';
+            
+            // Set header info
+            pdfTitle.textContent = title;
+            pdfModule.textContent = module;
+            originalLink.href = pdfUrl;
+            document.getElementById('canvas-link').href = pdfUrl;
+
+            // Load and parse PDF
+            loadPdf(pdfUrl);
+        }
+
+        function loadPdf(pdfUrl) {
+            spinner.style.display = 'block';
+            matchStatus.textContent = "Wird geladen...";
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            currentPdf = null;
+            matchingPages = [];
+            currentMatchIdx = -1;
+
+            pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+                currentPdf = pdf;
+                
+                // Scan all pages for matches
+                let scanPromises = [];
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    scanPromises.push(scanPage(pdf, i));
+                }
+
+                Promise.all(scanPromises).then(results => {
+                    // Filter results that contain the query
+                    matchingPages = results.filter(res => res.hasMatch);
+                    
+                    spinner.style.display = 'none';
+                    if (matchingPages.length === 0) {
+                        matchStatus.textContent = "Keine Treffer im Dokumententext";
+                        // If no text matches, just display page 1
+                        matchingPages = [{ pageNo: 1, text: "" }];
+                        currentMatchIdx = 0;
+                        renderCurrentMatchPage();
+                    } else {
+                        currentMatchIdx = 0;
+                        renderCurrentMatchPage();
+                    }
+                });
+            }).catch(error => {
+                console.error("Error loading PDF:", error);
+                spinner.style.display = 'none';
+                matchStatus.textContent = "Fehler beim Laden";
+            });
+        }
+
+        function scanPage(pdf, pageNo) {
+            return pdf.getPage(pageNo).then(page => {
+                return page.getTextContent().then(textContent => {
+                    const text = textContent.items.map(item => item.str).join(' ');
+                    const hasMatch = queryVal ? text.toLowerCase().includes(queryVal.toLowerCase()) : false;
+                    return { pageNo, text, hasMatch };
+                });
+            });
+        }
+
+        function renderCurrentMatchPage() {
+            if (!currentPdf || matchingPages.length === 0) return;
+            const match = matchingPages[currentMatchIdx];
+            
+            spinner.style.display = 'block';
+            matchStatus.textContent = `Seite ${match.pageNo} (Treffer ${currentMatchIdx + 1} von ${matchingPages.length})`;
+
+            // Update canvas link to open PDF directly on the active page
+            const pdfUrl = rows[currentDocIndex].getAttribute('data-pdf-url');
+            document.getElementById('canvas-link').href = `${pdfUrl}#page=${match.pageNo}`;
+
+            // Render PDF page on canvas
+            currentPdf.getPage(match.pageNo).then(page => {
+                const viewport = page.getViewport({ scale: 1.5 });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+
+                page.render(renderContext).promise.then(() => {
+                    spinner.style.display = 'none';
+                });
+            });
+        }
+
+        // Click next match
+        nextBtn.addEventListener('click', function() {
+            if (matchingPages.length === 0) return;
+            
+            if (currentMatchIdx < matchingPages.length - 1) {
+                currentMatchIdx++;
+                renderCurrentMatchPage();
+            } else {
+                // We reached the end of the current PDF matches!
+                // Let's transition to the next PDF in the list that has matches.
+                if (currentDocIndex < rows.length - 1) {
+                    selectDocument(currentDocIndex + 1);
+                } else {
+                    alert("Du hast das letzte PDF der Suchergebnisse erreicht!");
+                }
+            }
+        });
+
+        // Click previous match
+        prevBtn.addEventListener('click', function() {
+            if (matchingPages.length === 0) return;
+
+            if (currentMatchIdx > 0) {
+                currentMatchIdx--;
+                renderCurrentMatchPage();
+            } else {
+                // Transition to the previous PDF
+                if (currentDocIndex > 0) {
+                    // When loading previous PDF, we want to start from its last match page.
+                    const prevDocIdx = currentDocIndex - 1;
+                    rows.forEach(r => r.classList.remove('active-pdf'));
+                    rows[prevDocIdx].classList.add('active-pdf');
+                    currentDocIndex = prevDocIdx;
+                    
+                    const pdfUrl = rows[prevDocIdx].getAttribute('data-pdf-url');
+                    const title = rows[prevDocIdx].getAttribute('data-pdf-title');
+                    const module = rows[prevDocIdx].getAttribute('data-pdf-module');
+                    
+                    pdfTitle.textContent = title;
+                    pdfModule.textContent = module;
+                    originalLink.href = pdfUrl;
+                    document.getElementById('canvas-link').href = pdfUrl;
+
+                    spinner.style.display = 'block';
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    matchingPages = [];
+
+                    pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
+                        currentPdf = pdf;
+                        let scanPromises = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            scanPromises.push(scanPage(pdf, i));
+                        }
+                        Promise.all(scanPromises).then(results => {
+                            matchingPages = results.filter(res => res.hasMatch);
+                            spinner.style.display = 'none';
+                            if (matchingPages.length === 0) {
+                                matchingPages = [{ pageNo: 1, text: "" }];
+                                currentMatchIdx = 0;
+                            } else {
+                                currentMatchIdx = matchingPages.length - 1; // Go to last match
+                            }
+                            renderCurrentMatchPage();
+                        });
+                    });
+                } else {
+                    alert("Du bist bereits beim ersten PDF der Suchergebnisse!");
+                }
+            }
+        });
+
+        // Automatically load first PDF on load if any results
+        if (rows.length > 0) {
+            selectDocument(0);
+        }
+    });
+</script>
+{% endblock %}

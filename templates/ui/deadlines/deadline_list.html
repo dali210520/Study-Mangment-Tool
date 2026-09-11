@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Abgaben & Prüfungen | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Abgaben & Prüfungen</p>
+        <h1>Abgaben & Prüfungen</h1>
+        <p class="muted">Behalte Prüfungen, Abgaben, Projekte und weitere Termine im Blick.</p>
+    </div>
+    <div class="page-actions">
+        <a class="action-button" href="{% url 'ui-deadline-create' %}">Termin erstellen</a>
+    </div>
+</div>
+
+<section class="stat-strip" aria-label="Termin-Kennzahlen">
+    <div class="stat-card">
+        <strong>{{ deadline_total }}</strong>
+        <span>Termine gesamt</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ upcoming_count }}</strong>
+        <span>Anstehend</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ completed_count }}</strong>
+        <span>Erledigt</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ exam_count }}</strong>
+        <span>Prüfungen</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ overdue_count }}</strong>
+        <span>Überfällig</span>
+    </div>
+</section>
+
+<form class="toolbar" method="get">
+    <label class="toolbar-search">
+        <span aria-hidden="true">S</span>
+        <input type="search" name="q" value="{{ query }}" placeholder="Termine durchsuchen..." aria-label="Termine durchsuchen">
+    </label>
+    <select name="type" aria-label="Art filtern">
+        <option value="">Alle Arten</option>
+        {% for value, label in type_options %}
+            <option value="{{ value }}"{% if selected_type == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="status" aria-label="Status filtern">
+        <option value="">Alle Status</option>
+        {% for value, label in status_options %}
+            <option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="module" aria-label="Modul filtern">
+        <option value="">Alle Module</option>
+        {% for module in modules %}
+            <option value="{{ module.id }}"{% if selected_module == module.id|stringformat:"s" %} selected{% endif %}>{{ module.name }}</option>
+        {% endfor %}
+    </select>
+    <select name="date" aria-label="Datum filtern">
+        {% for value, label in date_options %}
+            <option value="{{ value }}"{% if selected_date == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button class="secondary-button" type="submit">Filtern</button>
+</form>
+
+{% if deadlines %}
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>Terminliste</h2>
+            <span class="metric-note">{{ deadlines|length }} angezeigt</span>
+        </div>
+        <div class="table-list">
+            {% for deadline in deadlines %}
+                <div class="table-row task-row{% if deadline.is_overdue %} overdue{% endif %}">
+                    <div class="date-pill">{{ deadline.date|date:"d.m.Y" }}</div>
+                    <div class="task-summary">
+                        <div>
+                            <div class="resource-title">{{ deadline.title }}</div>
+                            <div class="resource-meta">
+                                {% if deadline.module %}{{ deadline.module.name }}{% else %}Kein Modul{% endif %}
+                                {% if deadline.notes %} - {{ deadline.notes|truncatechars:120 }}{% endif %}
+                            </div>
+                        </div>
+                        <div class="task-badges">
+                            <span class="type-badge type-{{ deadline.deadline_type }}">{{ deadline.type_label }}</span>
+                            <span class="status-badge status-{{ deadline.status }}">{{ deadline.status_label }}</span>
+                            {% if deadline.is_overdue %}
+                                <span class="priority-badge priority-high">Überfällig</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="resource-actions">
+                        {% if deadline.status != "upcoming" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-deadline-status' deadline.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="upcoming">
+                                <button class="secondary-button" type="submit">Anstehend</button>
+                            </form>
+                        {% endif %}
+                        {% if deadline.status != "completed" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-deadline-status' deadline.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="completed">
+                                <button class="secondary-button" type="submit">Erledigt</button>
+                            </form>
+                        {% endif %}
+                        {% if deadline.status != "cancelled" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-deadline-status' deadline.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="cancelled">
+                                <button class="secondary-button" type="submit">Abbrechen</button>
+                            </form>
+                        {% endif %}
+                        <a class="secondary-button" href="{% url 'ui-deadline-update' deadline.id %}">Bearbeiten</a>
+                        <a class="danger-link" href="{% url 'ui-deadline-delete' deadline.id %}">Löschen</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% else %}
+    <div class="empty-state">Noch keine Abgaben oder Prüfungen gefunden.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,376 @@
+{% extends "base.html" %}
+
+{% block title %}Tagesansicht am {{ date_formatted }} | Study Management Tool{% endblock %}
+
+{% block content %}
+<style>
+    .timetable-wrapper {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+        margin-top: 24px;
+        overflow-x: auto;
+    }
+    .timetable {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+    }
+    .timetable th, .timetable td {
+        border: 1px solid var(--border);
+        padding: 8px;
+        vertical-align: top;
+    }
+    .timetable th {
+        background: var(--surface-muted);
+        text-align: center;
+        font-weight: 800;
+        font-size: 14px;
+    }
+    .timetable .time-col {
+        width: 80px;
+        text-align: center;
+        background: var(--surface-muted);
+        font-weight: bold;
+    }
+    .timetable .block-num {
+        font-size: 16px;
+        margin-bottom: 4px;
+    }
+    .timetable .block-time {
+        font-size: 12px;
+        color: var(--muted);
+    }
+    .cal-event {
+        font-size: 11px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+        display: block;
+        text-decoration: none;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+    .cal-event.lecture { background: #e4ecff; border: 1px solid #9eb7ff; color: #244ab8; }
+    .cal-event.task { background: #e8f7ea; border: 1px solid #28a745; color: #155724; }
+    .cal-event.deadline { background: #f8d7da; border: 1px solid #dc3545; color: #721c24; }
+    .cal-event.study_plan { background: #efe9ff; border: 1px solid #c9b8ff; color: #5532ad; }
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    .calendar-nav {
+        display: flex;
+        gap: 12px;
+    }
+    .calendar-btn {
+        padding: 8px 16px;
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-weight: bold;
+        color: var(--blue);
+        text-decoration: none;
+    }
+    .calendar-btn:hover {
+        background: var(--blue-soft);
+    }
+    .view-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .view-tab {
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        color: var(--text);
+        font-weight: bold;
+        background: var(--surface);
+        border: 1px solid var(--border);
+    }
+    .view-tab.active {
+        background: var(--blue);
+        color: white;
+        border-color: var(--blue);
+    }
+
+    .calendar-cell {
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .calendar-cell:hover {
+        background: var(--surface-soft);
+    }
+
+</style>
+
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Dashboard / Kalender</p>
+        <h1>Tagesplaner</h1>
+        <p class="muted">Dein Stundenplan für heute.</p>
+    </div>
+    <div class="page-actions">
+
+        <a class="primary-button" href="{% url 'ui-task-create' %}" style="background: var(--green); border-color: var(--green); margin-right: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Aufgabe
+        </a>
+        <a class="primary-button" href="{% url 'ui-lecture-create-global' %}" style="background: var(--purple); border-color: var(--purple); margin-right: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Vorlesung
+        </a>
+    
+        <a class="primary-button" href="{% url 'ui-import-davinci' %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            DaVinci Import
+        </a>
+    </div>
+</div>
+
+
+
+<div class="view-tabs">
+    <a href="{% url 'ui-calendar' %}" class="view-tab">Monat</a>
+    <a href="{% url 'ui-calendar-week' target_date.year target_date.month target_date.day %}" class="view-tab">Woche</a>
+    <a href="#" class="view-tab active">Tag</a>
+</div>
+
+<div class="timetable-wrapper">
+    <div class="calendar-header">
+        <h2>{{ date_formatted }}</h2>
+        <div class="calendar-nav">
+            <a href="{{ prev_day_url }}" class="calendar-btn">&larr; Vorheriger Tag</a>
+            <a href="{{ next_day_url }}" class="calendar-btn">Nächster Tag &rarr;</a>
+        </div>
+    </div>
+
+    <table class="timetable">
+        <thead>
+            <tr>
+                <th class="time-col">Zeit</th>
+                <th>{{ date_formatted }}</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            
+            
+            
+            
+            {% for block in time_blocks %}
+            <tr>
+                <td class="time-col">
+                    <div class="block-num">{{ block.num }}</div>
+                    <div class="block-time">{{ block.start }}<br>{{ block.end }}</div>
+                </td>
+                
+                <td class="calendar-cell" ondragover="handleDragOver(event)" ondrop="handleDrop(event, '{{ target_date|date:'Y-m-d' }}', '{{ block.start }}')" oncontextmenu="handleCellContextMenu(event, '{{ target_date|date:'Y-m-d' }}', '{{ block.start }}')" onclick="openAddModal('{{ target_date|date:'Y-m-d' }}', '{{ block.start }}')">
+                    {% for b_idx, ev_list in grid.items %}
+                        {% if b_idx == block.num %}
+                            {% for ev in ev_list %}
+                                <a href="{% if ev.type == 'lecture' %}{% url 'ui-lecture-update' ev.id %}{% elif ev.type == 'task' %}{% url 'ui-task-update' ev.id %}{% elif ev.type == 'deadline' %}{% url 'ui-deadline-update' ev.id %}{% elif ev.type == 'study_plan' %}{% url 'ui-plan-update' ev.id %}{% else %}#{% endif %}" class="cal-event {{ ev.type }}" data-id="{{ ev.id }}" data-type="{{ ev.type }}" draggable="true" ondragstart="handleDragStart(event)" ondragend="handleDragEnd(event)" oncontextmenu="handleEventContextMenu(event, '{{ ev.id }}', '{{ ev.type }}')" onclick="event.stopPropagation();" title="{{ ev.title }}">
+                                    {{ ev.title }}<br>
+                                    <span style="font-size: 9px; font-weight: normal; color: inherit; opacity: 0.8;">{{ ev.module_name }}</span>
+                                </a>
+                            {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Add Event Modal -->
+<div id="addEventModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:var(--surface); padding:32px; border-radius:12px; text-align:center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--border);">
+        <h3 style="margin-top:0; margin-bottom: 24px;">Was möchtest du hinzufügen?</h3>
+        
+        <div style="display:flex; gap:16px; justify-content:center; margin-bottom: 24px;">
+            <a id="btnVorlesung" href="#" class="primary-button" style="background:var(--purple); border-color:var(--purple);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Vorlesung
+            </a>
+            <a id="btnAufgabe" href="#" class="primary-button" style="background:var(--green); border-color:var(--green);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px; vertical-align: middle;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Aufgabe
+            </a>
+        </div>
+        
+        <a href="#" onclick="document.getElementById('addEventModal').style.display='none'; return false;" style="color:var(--muted); text-decoration:none; font-weight:bold;">Abbrechen</a>
+    </div>
+</div>
+
+<script>
+function openAddModal(date, time) {
+    document.getElementById('addEventModal').style.display = 'flex';
+    document.getElementById('btnVorlesung').href = "{% url 'ui-lecture-create-global' %}?date=" + date + "&time=" + time;
+    document.getElementById('btnAufgabe').href = "{% url 'ui-task-create' %}?date=" + date;
+}
+</script>
+
+
+<!-- CSRF Token for fetch API -->
+<form style="display:none;">{% csrf_token %}</form>
+
+<!-- Custom Context Menu for Events -->
+<div id="eventContextMenu" style="display:none; position:absolute; z-index:2000; background:var(--surface); border:1px solid var(--border); box-shadow:0 4px 12px rgba(0,0,0,0.15); border-radius:6px; overflow:hidden; min-width:150px;">
+    <a href="#" id="ctxCopyBtn" style="display:block; padding:10px 16px; text-decoration:none; color:var(--text); font-weight:500; font-size:14px; border-bottom:1px solid var(--border-soft);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px; vertical-align:middle;"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        Kopieren
+    </a>
+</div>
+
+<!-- Custom Context Menu for Empty Cells -->
+<div id="cellContextMenu" style="display:none; position:absolute; z-index:2000; background:var(--surface); border:1px solid var(--border); box-shadow:0 4px 12px rgba(0,0,0,0.15); border-radius:6px; overflow:hidden; min-width:150px;">
+    <a href="#" id="ctxPasteBtn" style="display:block; padding:10px 16px; text-decoration:none; color:var(--text); font-weight:500; font-size:14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px; vertical-align:middle;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+        Einfügen
+    </a>
+</div>
+
+<script>
+// CSRF Helper
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const csrftoken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+// Drag and Drop
+function handleDragStart(e) {
+    e.dataTransfer.setData('text/plain', JSON.stringify({
+        id: e.currentTarget.getAttribute('data-id'),
+        type: e.currentTarget.getAttribute('data-type')
+    }));
+    e.currentTarget.style.opacity = '0.5';
+}
+
+function handleDragEnd(e) {
+    e.currentTarget.style.opacity = '1';
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDrop(e, newDate, newTime) {
+    e.preventDefault();
+    try {
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (!data.id || !data.type) return;
+
+        fetch("{% url 'ui-api-event-move' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                event_type: data.type,
+                event_id: data.id,
+                new_date: newDate,
+                new_time: newTime || null
+            })
+        }).then(res => res.json()).then(result => {
+            if (result.status === 'success') {
+                window.location.reload();
+            } else {
+                alert('Fehler beim Verschieben: ' + result.error);
+            }
+        });
+    } catch(err) {
+        console.error(err);
+    }
+}
+
+// Context Menu (Copy/Paste)
+let copiedEvent = null;
+
+document.addEventListener('click', () => {
+    const evCtx = document.getElementById('eventContextMenu');
+    const cellCtx = document.getElementById('cellContextMenu');
+    if (evCtx) evCtx.style.display = 'none';
+    if (cellCtx) cellCtx.style.display = 'none';
+});
+
+function handleEventContextMenu(e, id, type) {
+    e.preventDefault();
+    e.stopPropagation();
+    const cellCtx = document.getElementById('cellContextMenu');
+    const evCtx = document.getElementById('eventContextMenu');
+    if (cellCtx) cellCtx.style.display = 'none';
+    if (evCtx) {
+        evCtx.style.display = 'block';
+        evCtx.style.left = e.pageX + 'px';
+        evCtx.style.top = e.pageY + 'px';
+    }
+    
+    document.getElementById('ctxCopyBtn').onclick = function(ev) {
+        ev.preventDefault();
+        copiedEvent = { id, type };
+        evCtx.style.display = 'none';
+    };
+}
+
+function handleCellContextMenu(e, newDate, newTime) {
+    if (!copiedEvent) return; // Only show if something is copied
+    e.preventDefault();
+    const evCtx = document.getElementById('eventContextMenu');
+    const cellCtx = document.getElementById('cellContextMenu');
+    if (evCtx) evCtx.style.display = 'none';
+    if (cellCtx) {
+        cellCtx.style.display = 'block';
+        cellCtx.style.left = e.pageX + 'px';
+        cellCtx.style.top = e.pageY + 'px';
+    }
+
+    document.getElementById('ctxPasteBtn').onclick = function(ev) {
+        ev.preventDefault();
+        fetch("{% url 'ui-api-event-copy' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                event_type: copiedEvent.type,
+                event_id: copiedEvent.id,
+                new_date: newDate,
+                new_time: newTime || null
+            })
+        }).then(res => res.json()).then(result => {
+            if (result.status === 'success') {
+                window.location.reload();
+            } else {
+                alert('Fehler beim Einfügen: ' + result.error);
+            }
+        });
+    };
+}
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Modul löschen | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Module</p>
+        <h1>Modul löschen</h1>
+        <p class="muted">Diese Aktion entfernt auch die zugeordneten Vorlesungen.</p>
+    </div>
+</div>
+
+<form class="danger-panel" method="post">
+    {% csrf_token %}
+    <h2>{{ module.name }}</h2>
+    <p class="muted">Möchtest du dieses Modul wirklich löschen?</p>
+    <div class="form-actions">
+        <button class="danger-button" type="submit">Endgültig löschen</button>
+        <a class="secondary-button" href="{% url 'ui-module-detail' module.id %}">Abbrechen</a>
+    </div>
+</form>
+{% endblock %}

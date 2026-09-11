@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Registrieren | Study Management Tool{% endblock %}
+
+{% block content %}
+<section class="auth-layout">
+    <div class="card">
+        <p class="eyebrow">Account</p>
+        <h1>Registrieren</h1>
+        <p class="muted">Erstelle ein normales Nutzerkonto für dein Dashboard.</p>
+
+        <form class="form-grid" method="post">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+                <div class="form-errors">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="field">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+
+            <div class="button-row">
+                <button class="primary-button" type="submit">Registrieren</button>
+                <a class="muted" href="{% url 'login' %}">Schon registriert?</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

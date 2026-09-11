@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}DaVinci Stundenplan Import | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Kalender / DaVinci Import</p>
+        <h1>Stundenplan Importieren</h1>
+        <p class="muted">Füge den Link zu deinem daVinci-Stundenplan ein, um Termine und Vorlesungen automatisch in deinen Kalender zu übertragen.</p>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <article class="panel" style="grid-column: 1 / -1;">
+        <div class="panel-heading">
+            <h2>DaVinci Link einfügen</h2>
+        </div>
+        
+        <form method="post" action="{% url 'ui-import-davinci' %}" class="form-container">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="davinci_url">DaVinci Stundenplan URL:</label>
+                <input type="url" id="davinci_url" name="davinci_url" class="form-control" required placeholder="https://davinci.ei.hs-duesseldorf.de/daVinciIS.dll?type=class&id=...">
+                <div class="help-text" style="color: var(--muted); font-size: 13px; margin-top: 8px;">
+                    Beispiel: <code>https://davinci.ei.hs-duesseldorf.de/daVinciIS.dll?type=class&id=9BAAC161-6FF4-46F7-AA32-2E66505855A3&week=0</code>
+                </div>
+            </div>
+            
+            <div class="form-actions" style="margin-top: 24px;">
+                <a href="{% url 'ui-calendar' %}" class="secondary-button">Abbrechen</a>
+                <button type="submit" class="primary-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Stundenplan importieren
+                </button>
+            </div>
+        </form>
+    </article>
+</div>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Vollständiger Kalender | Study Management Tool{% endblock %}
+
+{% block content %}
+<style>
+    .calendar-container {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        padding: 24px;
+        margin-top: 24px;
+    }
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    .calendar-nav {
+        display: flex;
+        gap: 12px;
+    }
+    .calendar-btn {
+        padding: 8px 16px;
+        background: var(--surface-soft);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-weight: bold;
+        color: var(--blue);
+    }
+    .calendar-btn:hover {
+        background: var(--blue-soft);
+    }
+    .calendar-grid-full {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .cal-day-header {
+        text-align: center;
+        font-weight: 800;
+        padding: 10px;
+        background: var(--surface-muted);
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .cal-day-cell {
+        min-height: 120px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        position: relative;
+        transition: background 0.2s, border-color 0.2s;
+    }
+    .cal-day-cell:not(.empty):hover {
+        background: var(--surface-soft);
+        border-color: var(--border-strong);
+    }
+    .cal-day-link {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        z-index: 1;
+        border-radius: 8px;
+    }
+    .cal-day-cell.empty {
+        background: var(--surface-soft);
+        border-color: transparent;
+    }
+    .cal-day-cell.today {
+        border: 2px solid var(--blue);
+        background: var(--blue-soft);
+    }
+    .cal-day-number {
+        font-weight: bold;
+        text-align: right;
+        margin-bottom: 6px;
+        color: var(--muted);
+        position: relative;
+        z-index: 2;
+        pointer-events: none;
+    }
+    .cal-day-cell.today .cal-day-number {
+        color: var(--blue);
+    }
+    .cal-event {
+        font-size: 11px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 600;
+        display: block;
+        text-decoration: none;
+        position: relative;
+        z-index: 2;
+    }
+    /* Re-use schedule event colors */
+    .cal-event.lecture { background: #e4ecff; border: 1px solid #9eb7ff; color: #244ab8; }
+    .cal-event.task { background: #e8f7ea; border: 1px solid #28a745; color: #155724; }
+    .cal-event.deadline { background: #f8d7da; border: 1px solid #dc3545; color: #721c24; }
+    .cal-event.study_plan { background: #efe9ff; border: 1px solid #c9b8ff; color: #5532ad; }
+
+    .view-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .view-tab {
+        padding: 6px 12px;
+        border-radius: 6px;
+        text-decoration: none;
+        color: var(--text);
+        font-weight: bold;
+        background: var(--surface);
+        border: 1px solid var(--border);
+    }
+    .view-tab.active {
+        background: var(--blue);
+        color: white;
+        border-color: var(--blue);
+    }
+</style>
+
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Dashboard / Kalender</p>
+        <h1>Vollständiger Kalender</h1>
+        <p class="muted">Alle Termine, Vorlesungen und Aufgaben im Überblick.</p>
+    </div>
+    <div class="page-actions">
+        <a class="primary-button" href="{% url 'ui-import-davinci' %}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            DaVinci Stundenplan importieren
+        </a>
+    </div>
+</div>
+
+<div class="view-tabs">
+    <a href="#" class="view-tab active">Monat</a>
+    <a href="{% url 'ui-calendar-week' today.year today.month today.day %}" class="view-tab">Woche</a>
+    <a href="{% url 'ui-calendar-day' today.year today.month today.day %}" class="view-tab">Tag</a>
+</div>
+
+<div class="calendar-container">
+    <div class="calendar-header">
+        <h2>{{ month_name }}</h2>
+        <div class="calendar-nav">
+            <a href="{{ prev_month }}" class="calendar-btn">&larr; Vorheriger Monat</a>
+            <a href="{{ next_month }}" class="calendar-btn">Nächster Monat &rarr;</a>
+        </div>
+    </div>
+    
+    <div class="calendar-grid-full">
+        {% for day_name in week_days %}
+            <div class="cal-day-header">{{ day_name }}</div>
+        {% endfor %}
+        
+        {% for week in calendar_grid %}
+            {% for day in week %}
+                <div class="cal-day-cell {% if not day.day %}empty{% endif %} {% if day.is_today %}today{% endif %}">
+                    {% if day.day %}
+                        <a href="{% url 'ui-calendar-day' year month day.day %}" class="cal-day-link" title="Details für {{ day.day }}. anzeigen"></a>
+                        <div class="cal-day-number">{{ day.day }}</div>
+                        {% for event in day.events %}
+                            {% if event.type == 'lecture' %}
+                                <a href="{% url 'ui-lecture-update' event.id %}" class="cal-event {{ event.type }}" title="{{ event.title }}">
+                            {% elif event.type == 'task' %}
+                                <a href="{% url 'ui-task-update' event.id %}" class="cal-event {{ event.type }}" title="{{ event.title }}">
+                            {% elif event.type == 'deadline' %}
+                                <a href="{% url 'ui-deadline-update' event.id %}" class="cal-event {{ event.type }}" title="{{ event.title }}">
+                            {% elif event.type == 'study_plan' %}
+                                <a href="{% url 'ui-plan-update' event.id %}" class="cal-event {{ event.type }}" title="{{ event.title }}">
+                            {% else %}
+                                <a href="#" class="cal-event {{ event.type }}" title="{{ event.title }}">
+                            {% endif %}
+                                {{ event.title }}
+                            </a>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

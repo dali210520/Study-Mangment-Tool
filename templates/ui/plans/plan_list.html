@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Lernpläne | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Lernpläne</p>
+        <h1>Lernpläne</h1>
+        <p class="muted">Plane Lerneinheiten, verknüpfe sie mit Modulen und Terminen und halte deinen Status aktuell.</p>
+    </div>
+    <div class="page-actions">
+        <a class="action-button" href="{% url 'ui-plan-create' %}">Lernplan erstellen</a>
+    </div>
+</div>
+
+<section class="stat-strip" aria-label="Lernplan-Kennzahlen">
+    <div class="stat-card">
+        <strong>{{ entry_total }}</strong>
+        <span>Einträge gesamt</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ planned_count }}</strong>
+        <span>Geplant</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ in_progress_count }}</strong>
+        <span>In Bearbeitung</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ done_count }}</strong>
+        <span>Erledigt</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ planned_minutes }}</strong>
+        <span>geplante Minuten</span>
+    </div>
+</section>
+
+<form class="toolbar" method="get">
+    <label class="toolbar-search">
+        <span aria-hidden="true">S</span>
+        <input type="search" name="q" value="{{ query }}" placeholder="Lernpläne durchsuchen..." aria-label="Lernpläne durchsuchen">
+    </label>
+    <select name="status" aria-label="Status filtern">
+        <option value="">Alle Status</option>
+        {% for value, label in status_options %}
+            <option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="module" aria-label="Modul filtern">
+        <option value="">Alle Module</option>
+        {% for module in modules %}
+            <option value="{{ module.id }}"{% if selected_module == module.id|stringformat:"s" %} selected{% endif %}>{{ module.name }}</option>
+        {% endfor %}
+    </select>
+    <select name="deadline" aria-label="Abgabe oder Prüfung filtern">
+        <option value="">Alle Termine</option>
+        {% for deadline in deadlines %}
+            <option value="{{ deadline.id }}"{% if selected_deadline == deadline.id|stringformat:"s" %} selected{% endif %}>{{ deadline.title }}</option>
+        {% endfor %}
+    </select>
+    <select name="date" aria-label="Datum filtern">
+        {% for value, label in date_options %}
+            <option value="{{ value }}"{% if selected_date == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button class="secondary-button" type="submit">Filtern</button>
+</form>
+
+{% if entries %}
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>Lernplanliste</h2>
+            <span class="metric-note">{{ entries|length }} angezeigt</span>
+        </div>
+        <div class="table-list">
+            {% for entry in entries %}
+                <div class="table-row task-row{% if entry.is_past_due %} overdue{% endif %}">
+                    <div class="date-pill">{{ entry.planned_date|date:"d.m.Y" }}</div>
+                    <div class="task-summary">
+                        <div>
+                            <div class="resource-title">{{ entry.topic }}</div>
+                            <div class="resource-meta">
+                                {{ entry.duration_minutes }} Minuten
+                                {% if entry.module %} - {{ entry.module.name }}{% endif %}
+                                {% if entry.deadline %} - {{ entry.deadline.title }}{% endif %}
+                                {% if entry.notes %} - {{ entry.notes|truncatechars:120 }}{% endif %}
+                            </div>
+                        </div>
+                        <div class="task-badges">
+                            <span class="status-badge status-{{ entry.status }}">{{ entry.status_label }}</span>
+                            {% if entry.is_past_due %}
+                                <span class="priority-badge priority-high">Nachholen</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="resource-actions">
+                        {% if entry.status != "planned" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-plan-status' entry.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="planned">
+                                <button class="secondary-button" type="submit">Geplant</button>
+                            </form>
+                        {% endif %}
+                        {% if entry.status != "in_progress" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-plan-status' entry.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="in_progress">
+                                <button class="secondary-button" type="submit">Starten</button>
+                            </form>
+                        {% endif %}
+                        {% if entry.status != "done" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-plan-status' entry.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="done">
+                                <button class="secondary-button" type="submit">Erledigt</button>
+                            </form>
+                        {% endif %}
+                        {% if entry.status != "skipped" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-plan-status' entry.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="skipped">
+                                <button class="secondary-button" type="submit">Überspringen</button>
+                            </form>
+                        {% endif %}
+                        <a class="secondary-button" href="{% url 'ui-plan-update' entry.id %}">Bearbeiten</a>
+                        <a class="danger-link" href="{% url 'ui-plan-delete' entry.id %}">Löschen</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% else %}
+    <div class="empty-state">Noch keine Lernpläne gefunden.</div>
+{% endif %}
+{% endblock %}

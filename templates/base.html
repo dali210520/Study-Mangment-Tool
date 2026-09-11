@@ -1,0 +1,2952 @@
+{% load static %}
+<!doctype html>
+<html lang="de">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Study Management Tool{% endblock %}</title>
+    <!-- Cropper.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+    <style>
+        :root {
+            --bg: #f7f9fd;
+            --surface: #ffffff;
+            --surface-soft: #f1f5ff;
+            --surface-muted: #eef3fb;
+            --border: #dde5f2;
+            --border-strong: #cad5e7;
+            --text: #101624;
+            --muted: #63708a;
+            --blue: #2f63f4;
+            --blue-soft: #e9efff;
+            --green: #55b957;
+            --green-soft: #e8f7ea;
+            --orange: #f29c38;
+            --orange-soft: #fff2df;
+            --red: #e34e4e;
+            --red-soft: #ffe8e8;
+            --purple: #6f49de;
+            --purple-soft: #efe9ff;
+            --shadow: 0 12px 28px rgba(31, 45, 75, 0.08);
+            --topbar-bg: rgba(247, 249, 253, 0.92);
+        }
+
+        body.dark-theme {
+            --bg: #0b0f19;
+            --surface: #121826;
+            --surface-soft: #1d2438;
+            --surface-muted: #151c2d;
+            --border: #1f2a40;
+            --border-strong: #2c3c5c;
+            --text: #f3f5f9;
+            --muted: #8896b0;
+            --blue: #4477ff;
+            --blue-soft: #13244d;
+            --green: #48c04b;
+            --green-soft: #11341c;
+            --orange: #ffa734;
+            --orange-soft: #38240f;
+            --red: #ff5757;
+            --red-soft: #3c1212;
+            --purple: #8f6eff;
+            --purple-soft: #231846;
+            --shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+            --topbar-bg: rgba(18, 24, 38, 0.92);
+        }
+
+        body.dark-theme .nav-icon.c-blue {
+            color: #4477ff;
+            background: #13244d;
+            border-color: #1f3773;
+        }
+        body.dark-theme .nav-icon.c-purple {
+            color: #8f6eff;
+            background: #231846;
+            border-color: #342468;
+        }
+        body.dark-theme .nav-icon.c-orange {
+            color: #ffa734;
+            background: #38240f;
+            border-color: #583917;
+        }
+        body.dark-theme .nav-icon.c-green {
+            color: #48c04b;
+            background: #11341c;
+            border-color: #1e522c;
+        }
+        body.dark-theme .nav-icon.c-red {
+            color: #ff5757;
+            background: #3c1212;
+            border-color: #5c1e1e;
+        }
+        body.dark-theme .nav-icon.c-teal {
+            color: #0df5d2;
+            background: #0b3c37;
+            border-color: #125e56;
+        }
+        body.dark-theme .nav-icon.c-pink {
+            color: #ff5ba2;
+            background: #441029;
+            border-color: #641c3e;
+        }
+        body.dark-theme .nav-icon.c-gray {
+            color: #a3aab6;
+            background: #232c3f;
+            border-color: #344057;
+        }
+
+        body.dark-theme input::placeholder,
+        body.dark-theme textarea::placeholder {
+            color: var(--muted) !important;
+            opacity: 0.6;
+        }
+
+        body.dark-theme select,
+        body.dark-theme input[type="text"],
+        body.dark-theme input[type="search"],
+        body.dark-theme input[type="password"],
+        body.dark-theme input[type="email"],
+        body.dark-theme input[type="number"],
+        body.dark-theme input[type="date"],
+        body.dark-theme input[type="time"],
+        body.dark-theme textarea {
+            background-color: var(--surface-soft);
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        body.dark-theme .sidebar-help {
+            background: linear-gradient(135deg, #1d2438, #121826);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Inter, Segoe UI, Arial, Helvetica, sans-serif;
+            font-size: 15px;
+            line-height: 1.45;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 30px;
+            line-height: 1.15;
+            margin-bottom: 0;
+        }
+
+        h2 {
+            font-size: 17px;
+            margin-bottom: 16px;
+        }
+
+        .app-shell {
+            display: grid;
+            grid-template-columns: 292px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            min-height: 100vh;
+            padding: 24px 16px;
+            position: sticky;
+            top: 0;
+        }
+
+        .brand {
+            align-items: center;
+            color: var(--blue);
+            display: flex;
+            font-size: 17px;
+            font-weight: 800;
+            gap: 12px;
+            padding: 6px 12px 18px;
+            white-space: nowrap;
+        }
+
+        .brand-mark,
+        .nav-icon,
+        .metric-icon,
+        .file-icon {
+            align-items: center;
+            display: inline-flex;
+            justify-content: center;
+        }
+
+        .brand-mark {
+            background: linear-gradient(135deg, #2f63f4, #6f49de);
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 800;
+            height: 34px;
+            width: 34px;
+        }
+
+        .side-nav {
+            display: grid;
+            gap: 8px;
+        }
+
+        .nav-link,
+        .logout-button {
+            align-items: center;
+            background: transparent;
+            border: 0;
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            display: flex;
+            gap: 12px;
+            min-height: 48px;
+            padding: 0 14px;
+            width: 100%;
+        }
+
+        .nav-link:hover,
+        .logout-button:hover,
+        .nav-link[aria-current="page"] {
+            background: var(--blue-soft);
+            color: var(--blue);
+        }
+
+        .nav-icon {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+            height: 28px;
+            width: 28px;
+        }
+
+        .nav-icon.c-blue {
+            color: #2f63f4;
+            background: #f0f4ff;
+            border-color: #dbe4ff;
+        }
+
+        .nav-icon.c-purple {
+            color: #6f49de;
+            background: #f4f0ff;
+            border-color: #e4dbff;
+        }
+
+        .nav-icon.c-orange {
+            color: #f29c38;
+            background: #fff6ed;
+            border-color: #ffe6cc;
+        }
+
+        .nav-icon.c-green {
+            color: #55b957;
+            background: #f0f9f1;
+            border-color: #dcf2de;
+        }
+
+        .nav-icon.c-red {
+            color: #e34e4e;
+            background: #fdf0f0;
+            border-color: #f9dcdc;
+        }
+
+        .nav-icon.c-teal {
+            color: #0d9488;
+            background: #f0fdfa;
+            border-color: #ccfbf1;
+        }
+
+        .nav-icon.c-pink {
+            color: #db2777;
+            background: #fdf2f8;
+            border-color: #fce7f3;
+        }
+
+        .nav-icon.c-gray {
+            color: #4b5563;
+            background: #f3f4f6;
+            border-color: #e5e7eb;
+        }
+
+        .nav-link[aria-current="page"] .nav-icon,
+        .nav-link:hover .nav-icon,
+        .logout-button:hover .nav-icon {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: #fff;
+        }
+
+        .logout-form {
+            margin: 0;
+        }
+
+        .sidebar-help {
+            background: linear-gradient(135deg, #f2f6ff, #ffffff);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-top: auto;
+            padding: 18px;
+        }
+
+        .sidebar-help-icon {
+            align-items: center;
+            background: var(--blue-soft);
+            border-radius: 12px;
+            color: var(--blue);
+            display: inline-flex;
+            font-weight: 800;
+            height: 46px;
+            justify-content: center;
+            margin-bottom: 12px;
+            width: 46px;
+        }
+
+        .sidebar-help p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .sidebar-help a {
+            color: var(--blue);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .main-area {
+            min-width: 0;
+        }
+
+        .topbar {
+            align-items: center;
+            background: var(--topbar-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 16px;
+            padding: 18px 28px;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        .calendar-top-icon {
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: inline-flex;
+            height: 44px;
+            justify-content: center;
+            width: 44px;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(31, 45, 75, 0.05);
+            transition: background 0.2s;
+        }
+
+        .calendar-top-icon:hover {
+            background: var(--surface-soft);
+        }
+
+        .search-box {
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(31, 45, 75, 0.05);
+            display: flex;
+            gap: 10px;
+            max-width: 640px;
+            padding: 0 14px;
+            width: 100%;
+        }
+
+        .search-box span {
+            color: var(--muted);
+            font-size: 20px;
+        }
+
+        .search-box input {
+            border: 0;
+            color: var(--text);
+            min-height: 44px;
+            outline: none;
+            width: 100%;
+        }
+
+        .top-actions {
+            align-items: center;
+            display: flex;
+            gap: 14px;
+            margin-left: auto;
+        }
+
+        .notification {
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            display: inline-flex;
+            font-size: 18px;
+            height: 42px;
+            justify-content: center;
+            position: relative;
+            width: 42px;
+        }
+
+        .notification-badge {
+            background: var(--red);
+            border: 2px solid var(--surface);
+            border-radius: 999px;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1;
+            padding: 3px 5px;
+            position: absolute;
+            right: -4px;
+            top: -5px;
+        }
+
+        .profile-chip {
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 4px 12px rgba(31, 45, 75, 0.06);
+            display: flex;
+            gap: 12px;
+            min-height: 58px;
+            padding: 7px 12px 7px 8px;
+        }
+
+        .avatar {
+            align-items: center;
+            background: linear-gradient(135deg, #2f63f4, #55b957);
+            border-radius: 999px;
+            color: #fff;
+            display: inline-flex;
+            font-weight: 800;
+            height: 42px;
+            justify-content: center;
+            width: 42px;
+        }
+
+        .profile-name {
+            font-weight: 800;
+            line-height: 1.2;
+            max-width: 170px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .profile-logout {
+            background: transparent;
+            border: 0;
+            color: var(--muted);
+            cursor: pointer;
+            font-weight: 800;
+            padding: 6px;
+        }
+
+        .page {
+            padding: 28px;
+        }
+
+        .dashboard-title {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .muted,
+        .eyebrow {
+            color: var(--muted);
+        }
+
+        .eyebrow {
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .panel,
+        .metric-card,
+        .welcome-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .panel {
+            padding: 20px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(31, 45, 75, 0.08);
+            border-color: var(--border-strong);
+        }
+
+        .dashboard-top {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: 1.4fr 1fr;
+            margin-bottom: 18px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .welcome-panel {
+            align-items: center;
+            display: grid;
+            gap: 18px;
+            grid-template-columns: minmax(0, 1fr) 150px;
+            min-height: 174px;
+            overflow: hidden;
+            padding: 32px;
+        }
+
+        .welcome-panel .eyebrow {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .welcome-panel h2 {
+            font-size: 32px;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+
+        .welcome-panel p.muted {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .student-art {
+            align-self: end;
+            height: 126px;
+            position: relative;
+        }
+
+        .student-art::before {
+            background: linear-gradient(135deg, #dfe8ff, #f2f7ff);
+            border-radius: 999px;
+            content: "";
+            height: 98px;
+            position: absolute;
+            right: 8px;
+            top: 10px;
+            width: 98px;
+        }
+
+        .student-head {
+            background: #ffbe8c;
+            border-radius: 50%;
+            height: 34px;
+            position: absolute;
+            right: 46px;
+            top: 26px;
+            width: 34px;
+            z-index: 2;
+        }
+
+        .student-body {
+            background: var(--blue);
+            border-radius: 18px 18px 8px 8px;
+            height: 58px;
+            position: absolute;
+            right: 32px;
+            top: 58px;
+            width: 60px;
+            z-index: 2;
+        }
+
+        .student-laptop {
+            background: #182b56;
+            border-radius: 8px 8px 3px 3px;
+            bottom: 10px;
+            height: 42px;
+            left: 10px;
+            position: absolute;
+            width: 82px;
+            z-index: 3;
+        }
+
+        .student-desk {
+            background: #9bb2e7;
+            border-radius: 999px;
+            bottom: 0;
+            height: 8px;
+            left: 0;
+            position: absolute;
+            right: 0;
+        }
+
+        .metric-card {
+            min-height: 174px;
+            padding: 22px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px rgba(31, 45, 75, 0.12);
+            border-color: var(--blue);
+        }
+
+        .metric-icon {
+            border-radius: 12px;
+            color: #fff;
+            font-weight: 800;
+            height: 44px;
+            margin-bottom: 18px;
+            width: 44px;
+        }
+
+        .metric-icon.blue {
+            background: var(--blue);
+        }
+
+        .metric-icon.green {
+            background: var(--green);
+        }
+
+        .metric-icon.orange {
+            background: var(--orange);
+        }
+
+        .metric-icon.purple {
+            background: var(--purple);
+        }
+
+        .metric-label {
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 18px;
+        }
+
+        .metric-value {
+            font-size: 30px;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .metric-note {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .dashboard-middle {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: 1.4fr 1fr;
+            margin-bottom: 18px;
+        }
+
+        .middle-right-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .dashboard-bottom {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .panel-heading {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .panel-heading h2 {
+            margin-bottom: 0;
+        }
+
+        .panel-link {
+            color: var(--blue);
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .progress-row {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+
+        .progress-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .progress-label {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-label span {
+            font-weight: 800;
+        }
+
+        .progress-label strong {
+            font-size: 18px;
+        }
+
+        .progress-track {
+            background: #e7edf7;
+            border-radius: 999px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: var(--blue);
+            border-radius: inherit;
+            height: 100%;
+        }
+
+        .module-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .module-tile {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: inherit;
+            display: block;
+            padding: 16px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .module-tile:hover,
+        .resource-card:hover {
+            border-color: var(--blue);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(31, 45, 75, 0.12);
+        }
+
+        .module-top {
+            align-items: center;
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .module-icon {
+            align-items: center;
+            background: var(--blue);
+            border-radius: 12px;
+            color: #fff;
+            display: inline-flex;
+            font-weight: 800;
+            height: 44px;
+            justify-content: center;
+            width: 44px;
+        }
+
+        .module-tile:nth-child(2n) .module-icon {
+            background: var(--green);
+        }
+
+        .module-tile:nth-child(3n) .module-icon {
+            background: var(--purple);
+        }
+
+        .module-title {
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .module-subtitle {
+            color: var(--muted);
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .module-progress {
+            align-items: center;
+            display: grid;
+            gap: 10px;
+            grid-template-columns: minmax(0, 1fr) auto;
+        }
+
+        .event-list {
+            display: grid;
+            gap: 0;
+        }
+
+        .event-item {
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 56px minmax(0, 1fr) auto 52px;
+            padding: 12px 8px;
+            border-radius: 8px;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .event-item:hover {
+            background: var(--blue-soft);
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+        .event-item:first-child {
+            padding-top: 0;
+        }
+
+        .event-date {
+            align-items: center;
+            background: var(--blue-soft);
+            border-radius: 9px;
+            color: var(--blue);
+            display: inline-flex;
+            flex-direction: column;
+            font-size: 12px;
+            font-weight: 900;
+            height: 48px;
+            justify-content: center;
+            line-height: 1.1;
+            width: 44px;
+        }
+
+        .event-date.deadline {
+            background: var(--red-soft);
+            color: var(--red);
+        }
+
+        .event-date.task {
+            background: var(--green-soft);
+            color: var(--green);
+        }
+
+        .event-date.study_plan {
+            background: var(--purple-soft);
+            color: var(--purple);
+        }
+
+        .event-title,
+        .file-title {
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .event-meta,
+        .file-meta {
+            color: var(--muted);
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .badge {
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 6px 9px;
+            white-space: nowrap;
+        }
+
+        .badge-lecture {
+            background: var(--blue-soft);
+            color: var(--blue);
+        }
+
+        .badge-task {
+            background: var(--green-soft);
+            color: var(--green);
+        }
+
+        .badge-deadline {
+            background: var(--red-soft);
+            color: var(--red);
+        }
+
+        .badge-study_plan {
+            background: var(--purple-soft);
+            color: var(--purple);
+        }
+
+        .week-header {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .week-range {
+            font-weight: 800;
+        }
+
+        .week-days {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            margin-bottom: 14px;
+            margin-left: 54px;
+        }
+
+        .week-day {
+            border-radius: 9px;
+            padding: 8px 4px;
+            text-align: center;
+        }
+
+        .week-day.today {
+            background: var(--blue-soft);
+            color: var(--blue);
+        }
+
+        .week-day-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .week-day-number {
+            font-weight: 900;
+        }
+
+        .schedule-wrap {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: 44px minmax(0, 1fr);
+        }
+
+        .schedule-times {
+            display: grid;
+            grid-template-rows: repeat(5, 52px);
+        }
+
+        .schedule-times span {
+            color: var(--muted);
+            font-size: 11px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding-right: 8px;
+            transform: translateY(-8px);
+        }
+
+        .schedule-grid {
+            background:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 100% 52px, calc(100% / 7) 100%;
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            grid-template-rows: repeat(5, 52px);
+            min-height: 260px;
+            padding: 4px;
+        }
+
+        .schedule-event {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-radius: 6px;
+            padding: 4px;
+            height: calc(100% - 6px);
+            min-height: 0;
+            max-height: 46px;
+            box-sizing: border-box;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .schedule-event-title {
+            font-size: 9.5px;
+            font-weight: 800;
+            line-height: 1.2;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        .schedule-event span {
+            display: block;
+            font-size: 8.5px;
+            font-weight: 600;
+            opacity: 0.85;
+            margin-top: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .schedule-event.lecture {
+            background: #e4ecff;
+            border: 1px solid #9eb7ff;
+            color: #244ab8;
+        }
+
+        .schedule-event.task {
+            background: #e8f7ea;
+            border: 1px solid #a7dbad;
+            color: #24753a;
+        }
+
+        .schedule-event.deadline {
+            background: #ffe9d3;
+            border: 1px solid #f0b875;
+            color: #9b5616;
+        }
+
+        .schedule-event.study_plan {
+            background: #efe9ff;
+            border: 1px solid #c9b8ff;
+            color: #5532ad;
+        }
+
+        .file-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .file-row {
+            align-items: center;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 36px minmax(0, 1fr) auto;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        .file-row:hover {
+            background: var(--blue-soft);
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+        .file-icon {
+            background: var(--red-soft);
+            border-radius: 8px;
+            color: var(--red);
+            font-size: 11px;
+            font-weight: 900;
+            height: 34px;
+            width: 34px;
+        }
+
+        .file-size {
+            color: var(--muted);
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .material-search {
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            padding: 0 12px;
+        }
+
+        .material-search input {
+            border: 0;
+            min-height: 38px;
+            outline: 0;
+            width: 100%;
+        }
+
+        .status-panel {
+            align-items: center;
+            display: grid;
+            gap: 24px;
+            grid-template-columns: 150px minmax(0, 1fr);
+        }
+
+        .donut {
+            align-items: center;
+            background: conic-gradient(var(--donut));
+            border-radius: 50%;
+            display: flex;
+            height: 148px;
+            justify-content: center;
+            position: relative;
+            width: 148px;
+        }
+
+        .donut::after {
+            background: var(--surface);
+            border-radius: 50%;
+            content: "";
+            height: 88px;
+            position: absolute;
+            width: 88px;
+        }
+
+        .donut-center {
+            position: relative;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .donut-center span {
+            color: var(--muted);
+            display: block;
+            font-size: 12px;
+        }
+
+        .donut-center strong {
+            font-size: 28px;
+        }
+
+        .status-list {
+            display: grid;
+            gap: 11px;
+        }
+
+        .status-row {
+            align-items: center;
+            display: grid;
+            gap: 8px;
+            grid-template-columns: 12px minmax(0, 1fr) auto;
+        }
+
+        .status-dot {
+            border-radius: 50%;
+            height: 9px;
+            width: 9px;
+        }
+
+        .status-dot.done {
+            background: var(--green);
+        }
+
+        .status-dot.progress {
+            background: var(--blue);
+        }
+
+        .status-dot.open {
+            background: var(--orange);
+        }
+
+        .status-dot.overdue {
+            background: var(--red);
+        }
+
+        .status-value {
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            color: var(--muted);
+            padding: 18px;
+        }
+
+        .page-intro {
+            align-items: center;
+            display: flex;
+            gap: 18px;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        .page-intro p {
+            margin-bottom: 0;
+        }
+
+        .page-actions {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .action-button,
+        .secondary-button,
+        .danger-button,
+        .danger-link {
+            align-items: center;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            font-weight: 800;
+            justify-content: center;
+            min-height: 40px;
+            padding: 0 14px;
+        }
+
+        .action-button {
+            background: var(--blue);
+            border: 1px solid var(--blue);
+            color: #fff;
+        }
+
+        .secondary-button {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .danger-button,
+        .danger-link {
+            background: var(--red-soft);
+            border: 1px solid #f4c6c6;
+            color: var(--red);
+        }
+
+        .toolbar {
+            align-items: center;
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            margin-bottom: 18px;
+        }
+
+        .toolbar-search {
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            display: flex;
+            gap: 10px;
+            max-width: 460px;
+            padding: 0 12px;
+            width: 100%;
+        }
+
+        .toolbar-search input {
+            border: 0;
+            min-height: 40px;
+            outline: none;
+            width: 100%;
+        }
+
+        .toolbar select {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            min-height: 42px;
+            padding: 0 10px;
+        }
+
+        .stat-strip {
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin-bottom: 18px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 18px;
+        }
+
+        .stat-card strong {
+            display: block;
+            font-size: 26px;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .stat-card span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .resource-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .resource-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            color: inherit;
+            display: grid;
+            gap: 14px;
+            padding: 18px;
+        }
+
+        .resource-card-header {
+            align-items: start;
+            display: flex;
+            gap: 12px;
+        }
+
+        .resource-icon {
+            align-items: center;
+            background: var(--blue);
+            border-radius: 12px;
+            color: #fff;
+            display: inline-flex;
+            flex: 0 0 auto;
+            font-weight: 900;
+            height: 44px;
+            justify-content: center;
+            width: 44px;
+        }
+
+        .resource-card:nth-child(2n) .resource-icon {
+            background: var(--green);
+        }
+
+        .resource-card:nth-child(3n) .resource-icon {
+            background: var(--purple);
+        }
+
+        .resource-title {
+            font-size: 17px;
+            font-weight: 900;
+            overflow-wrap: anywhere;
+        }
+
+        .resource-meta {
+            color: var(--muted);
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .resource-description {
+            color: #38445c;
+            margin-bottom: 0;
+            min-height: 42px;
+            overflow-wrap: anywhere;
+        }
+
+        .resource-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .detail-grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+        }
+
+        .info-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .info-row {
+            border-bottom: 1px solid var(--border);
+            display: grid;
+            gap: 4px;
+            padding-bottom: 12px;
+        }
+
+        .info-row:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-row span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .info-row strong {
+            overflow-wrap: anywhere;
+        }
+
+        .table-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .table-row {
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            display: grid;
+            gap: 14px;
+            grid-template-columns: 112px minmax(0, 1fr) auto;
+            padding: 12px;
+        }
+
+        .date-pill {
+            background: var(--blue-soft);
+            border-radius: 8px;
+            color: var(--blue);
+            font-weight: 900;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .task-row {
+            grid-template-columns: 112px minmax(0, 1fr) auto;
+        }
+
+        .task-row.overdue {
+            border-color: #f4c6c6;
+            background: var(--red-soft);
+        }
+
+        .task-summary {
+            display: grid;
+            gap: 8px;
+        }
+
+        .task-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .status-badge,
+        .priority-badge,
+        .type-badge {
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 5px 9px;
+            white-space: nowrap;
+        }
+
+        .status-open {
+            background: var(--orange-soft);
+            color: #9b5616;
+        }
+
+        .status-in_progress {
+            background: var(--blue-soft);
+            color: var(--blue);
+        }
+
+        .status-done {
+            background: var(--green-soft);
+            color: var(--green);
+        }
+
+        .status-upcoming {
+            background: var(--blue-soft);
+            color: var(--blue);
+        }
+
+        .status-completed {
+            background: var(--green-soft);
+            color: var(--green);
+        }
+
+        .status-cancelled {
+            background: var(--surface-muted);
+            color: var(--muted);
+        }
+
+        .status-planned {
+            background: var(--purple-soft);
+            color: var(--purple);
+        }
+
+        .status-skipped {
+            background: var(--surface-muted);
+            color: var(--muted);
+        }
+
+        .priority-low {
+            background: var(--surface-muted);
+            color: var(--muted);
+        }
+
+        .priority-medium {
+            background: var(--purple-soft);
+            color: var(--purple);
+        }
+
+        .priority-high {
+            background: var(--red-soft);
+            color: var(--red);
+        }
+
+        .type-assignment {
+            background: var(--green-soft);
+            color: var(--green);
+        }
+
+        .type-exam {
+            background: var(--red-soft);
+            color: var(--red);
+        }
+
+        .type-presentation {
+            background: var(--purple-soft);
+            color: var(--purple);
+        }
+
+        .type-project {
+            background: var(--orange-soft);
+            color: #9b5616;
+        }
+
+        .type-other {
+            background: var(--surface-muted);
+            color: var(--muted);
+        }
+
+        .quick-status-form {
+            display: inline-flex;
+            margin: 0;
+        }
+
+        .quick-status-form button {
+            min-height: 34px;
+            padding: 0 10px;
+        }
+
+        .form-panel,
+        .danger-panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            max-width: 760px;
+            padding: 22px;
+        }
+
+        .danger-panel {
+            border-color: #f4c6c6;
+        }
+
+        .field textarea,
+        .field select {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            min-height: 42px;
+            padding: 9px 11px;
+            width: 100%;
+        }
+
+        .field textarea {
+            resize: vertical;
+        }
+
+        .form-actions {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .section-gap {
+            margin-top: 18px;
+        }
+
+        .auth-shell {
+            min-height: 100vh;
+            padding: 36px 20px;
+        }
+
+        .auth-header {
+            margin: 0 auto 24px;
+            max-width: 420px;
+        }
+
+        .auth-layout {
+            margin: 0 auto;
+            max-width: 420px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 14px;
+        }
+
+        .field label {
+            display: block;
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .field input {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            min-height: 42px;
+            padding: 9px 11px;
+            width: 100%;
+        }
+
+        .field .errorlist,
+        .form-errors .errorlist {
+            color: var(--red);
+            font-size: 13px;
+            margin: 6px 0 0;
+            padding-left: 18px;
+        }
+
+        .button-row {
+            align-items: center;
+            display: flex;
+            gap: 12px;
+            justify-content: space-between;
+            margin-top: 4px;
+        }
+
+        .primary-button {
+            background: var(--blue);
+            border: 1px solid var(--blue);
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 800;
+            min-height: 42px;
+            padding: 0 16px;
+        }
+
+        @media (max-width: 1400px) {
+            .dashboard-top {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 980px) {
+            .app-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                min-height: auto;
+                position: static;
+            }
+
+            .side-nav {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .sidebar-help {
+                display: none;
+            }
+
+            .topbar {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-top,
+            .dashboard-grid,
+            .right-stack {
+                grid-template-columns: 1fr;
+            }
+
+            .welcome-panel {
+                grid-template-columns: 1fr;
+            }
+
+            .student-art {
+                display: none;
+            }
+        }
+
+        @media (max-width: 640px) {
+
+            .page,
+            .topbar,
+            .sidebar {
+                padding: 18px;
+            }
+
+            .side-nav,
+            .module-grid,
+            .status-panel,
+            .stat-strip,
+            .resource-grid,
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .event-item {
+                align-items: start;
+                grid-template-columns: 48px minmax(0, 1fr);
+            }
+
+            .event-time,
+            .event-item .badge {
+                justify-self: start;
+            }
+
+            .toolbar,
+            .table-row,
+            .task-row {
+                align-items: stretch;
+                flex-direction: column;
+                grid-template-columns: 1fr;
+            }
+
+            .profile-chip {
+                width: 100%;
+            }
+        }
+
+        /* Autocomplete suggestions dropdown styling */
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border-strong);
+            border-radius: 9px;
+            box-shadow: var(--shadow);
+            margin-top: 6px;
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .autocomplete-suggestion {
+            padding: 10px 14px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            text-align: left;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .autocomplete-suggestion:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-suggestion:hover,
+        .autocomplete-suggestion.active {
+            background: var(--blue-soft);
+            color: var(--blue);
+        }
+
+        .autocomplete-suggestion-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .autocomplete-suggestion-meta {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .site-footer {
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+            padding: 24px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .footer-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .footer-link:hover {
+            color: var(--blue);
+        }
+
+        .footer-right {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .language-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lang-btn {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .lang-btn:hover {
+            border-color: var(--blue);
+            color: var(--blue);
+        }
+
+        .lang-btn.active {
+            background: var(--blue);
+            color: #ffffff;
+            border-color: var(--blue);
+        }
+
+        .footer-socials {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .social-icon {
+            color: var(--muted);
+            transition: color 0.15s ease, transform 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .social-icon:hover {
+            color: var(--blue);
+            transform: translateY(-2px);
+        }
+
+        .profile-menu-item:hover {
+            background: var(--surface-soft) !important;
+        }
+    </style>
+</head>
+
+<body>
+    {% if request.user.is_authenticated %}
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" href="{% url 'dashboard' %}">
+                <span class="brand-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+                        <path
+                            d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+                        <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+                        <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+                    </svg></span>
+                <span>Study-Management-Tool</span>
+            </a>
+            <nav class="side-nav" aria-label="Hauptnavigation">
+                <a class="nav-link" href="{% url 'dashboard' %}" {% if active_nav == 'dashboard' %} aria-current="page" {% endif %}>
+                    <span class="nav-icon c-blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                             <circle cx="12" cy="12" r="10" />
+                             <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                         </svg></span>
+                    <span data-translate="dashboard">Dashboard</span>
+                </a>
+                <a class="nav-link" href="{% url 'ui-module-list' %}" {% if active_nav == 'modules' %} aria-current="page" {% endif %}>
+                    <span class="nav-icon c-purple"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                             <path
+                                 d="m12.83 2.18a1.5 1.5 0 0 0-1.66 0L2.6 7.08a1.5 1.5 0 0 0 0 2.83l8.58 4.91a1.5 1.5 0 0 0 1.66 0l8.58-4.9a1.5 1.5 0 0 0 0-2.83z" />
+                             <path d="m22 17.65-9.17 5.16a1.5 1.5 0 0 1-1.66 0L2 17.65" />
+                             <path d="m22 12.65-9.17 5.16a1.5 1.5 0 0 1-1.66 0L2 12.65" />
+                         </svg></span>
+                    <span data-translate="modules">Module</span>
+                </a>
+                <a class="nav-link" href="{% url 'ui-lecture-list' %}" {% if active_nav == 'lectures' %} aria-current="page" {% endif %}>
+                    <span class="nav-icon c-orange"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                             <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                             <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                         </svg></span>
+                    <span data-translate="lectures">Vorlesungen</span>
+                </a>
+                <a class="nav-link" href="{% url 'ui-task-list' %}" {% if active_nav == 'tasks' %} aria-current="page" {% endif %}>
+                    <span class="nav-icon c-green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                             <circle cx="12" cy="12" r="10" />
+                             <circle cx="12" cy="12" r="6" />
+                             <circle cx="12" cy="12" r="2" />
+                         </svg></span>
+                    <span data-translate="tasks">Aufgaben</span>
+                </a>
+                <a class="nav-link" href="{% url 'ui-deadline-list' %}" {% if active_nav == 'deadlines' %} aria-current="page" {% endif %}>
+                    <span class="nav-icon c-red"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                             <path d="m9 12 2 2 4-4" />
+                         </svg></span>
+                    <span data-translate="deadlines">Abgaben & Prüfungen</span>
+                </a>
+                <a class="nav-link" href="{% url 'ui-plan-list' %}" {% if active_nav == 'plans' %} aria-current="page" {% endif %}>
+                    <span class="nav-icon c-teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                             <path
+                                 d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+                             <path
+                                 d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
+                             <path d="M15 13a4.5 4.5 0 0 1-3-4.5" />
+                             <path d="M17.599 6.5a3 3 0 0 0 .399-1.375" />
+                             <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
+                             <path d="M3.477 10.896a4 4 0 0 1-.593-.896" />
+                             <path d="M20.523 10.896a4 4 0 0 0 .593-.896" />
+                             <path d="M12 18v3" />
+                             <path d="M8 21h8" />
+                         </svg></span>
+                    <span data-translate="plans">Lernpläne</span>
+                </a>
+                <a class="nav-link" href="{% url 'ui-progress' %}" {% if active_nav == 'progress' %} aria-current="page" {% endif %}>
+                    <span class="nav-icon c-orange"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                             <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                             <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                             <path d="M4 22h16" />
+                             <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                             <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                             <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                         </svg></span>
+                    <span data-translate="progress">Fortschritt</span>
+                </a>
+                <a class="nav-link" href="{% url 'ui-material-list' %}" {% if active_nav == 'materials' %} aria-current="page" {% endif %}>
+                    <span class="nav-icon c-pink"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                             <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                             <path d="M6 8h2" />
+                             <path d="M6 12h2" />
+                             <path d="M16 8h2" />
+                             <path d="M16 12h2" />
+                         </svg></span>
+                    <span data-translate="materials">PDF-Unterlagen</span>
+                </a>
+                <a class="nav-link" href="{% url 'ui-search' %}" {% if active_nav == 'search' %} aria-current="page" {% endif %}>
+                    <span class="nav-icon c-gray"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                             <path d="M3 7V5a2 2 0 0 1 2-2h2" />
+                             <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+                             <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+                             <path d="M7 21H5a2 2 0 0 1-2-2v-2" />
+                             <circle cx="12" cy="12" r="3" />
+                             <path d="m16 16-1.9-1.9" />
+                         </svg></span>
+                    <span data-translate="search">Suche</span>
+                </a>
+                <form class="logout-form" method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button class="logout-button" type="submit">
+                        <span class="nav-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" x2="9" y1="12" y2="12" />
+                            </svg></span>
+                        <span data-translate="logout">Logout</span>
+                    </button>
+                </form>
+            </nav>
+
+        </aside>
+        <div class="main-area">
+            <header class="topbar">
+                <a href="{% url 'ui-calendar' %}" class="calendar-top-icon" title="Zum vollständigen Kalender">
+                    <span aria-hidden="true" style="font-size: 20px;">📅</span>
+                </a>
+                <form class="search-box" role="search" method="get" action="{% url 'ui-search' %}">
+                    <span aria-hidden="true" style="display: inline-flex; align-items: center; color: var(--muted);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                    <input type="search" name="q" placeholder="PDF-Inhalte durchsuchen ..." aria-label="Suche" data-translate-placeholder="search_placeholder">
+                </form>
+                <div class="top-actions">
+                    <div class="notification-wrapper" style="position: relative;">
+                        <button type="button" class="notification" aria-label="Benachrichtigungen"
+                            onclick="toggleNotifications()" style="cursor: pointer;">
+                            <span aria-hidden="true">!</span>
+                            {% if unread_notifications_count > 0 %}
+                            <span class="notification-badge" id="notif-badge">{{ unread_notifications_count }}</span>
+                            {% endif %}
+                        </button>
+                        <div id="notification-dropdown" class="notification-dropdown"
+                            style="display: none; position: absolute; right: 0; top: 50px; width: 300px; background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 8px; box-shadow: var(--shadow); z-index: 1000; padding: 10px; text-align: left;">
+                            <h4
+                                style="margin: 0 0 10px 0; font-size: 14px; border-bottom: 1px solid var(--border); padding-bottom: 5px; color: var(--text);">
+                                Benachrichtigungen</h4>
+                            {% if latest_notifications %}
+                            <ul style="list-style: none; padding: 0; margin: 0;">
+                                {% for notif in latest_notifications %}
+                                <li id="notif-{{ notif.id }}"
+                                    style="padding: 8px 0; border-bottom: 1px solid var(--surface-muted); font-size: 13px; color: var(--text); {% if not notif.is_read %}font-weight: bold;{% endif %}; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                                    <div style="flex-grow: 1;">
+                                        {% if notif.link %}
+                                        <a href="{{ notif.link }}" style="text-decoration: none; color: inherit; display: block;">{{ notif.message }}<br><small style="color: var(--muted);">{{ notif.created_at|date:"d.m.Y H:i" }}</small></a>
+                                        {% else %}
+                                        <a href="{% url 'ui-task-list' %}" style="text-decoration: none; color: inherit; display: block;">{{ notif.message }}<br><small style="color: var(--muted);">{{ notif.created_at|date:"d.m.Y H:i" }}</small></a>
+                                        {% endif %}
+                                    </div>
+                                    <button
+                                        onclick="deleteNotification({{ notif.id }}); event.stopPropagation(); return false;"
+                                        style="background: none; border: none; color: var(--danger, #dc3545); cursor: pointer; padding: 0 4px; border-radius: 4px; line-height: 1; font-size: 14px;"
+                                        title="Benachrichtigung löschen">
+                                        ✕
+                                    </button>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p style="font-size: 13px; color: var(--muted); margin: 0;">Keine Benachrichtigungen.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% csrf_token %}
+                    <script>
+                        function toggleNotifications() {
+                            const dropdown = document.getElementById('notification-dropdown');
+                            const badge = document.getElementById('notif-badge');
+                            if (dropdown.style.display === 'none') {
+                                dropdown.style.display = 'block';
+                                if (badge && badge.style.display !== 'none') {
+                                    fetch('{% url "mark-notifications-read" %}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                                        }
+                                    }).then(response => {
+                                        if (response.ok) {
+                                            badge.style.display = 'none';
+                                        }
+                                    });
+                                }
+                            } else {
+                                dropdown.style.display = 'none';
+                            }
+                        }
+
+                        function deleteNotification(id) {
+                            // Sofort ausblenden, damit der Nutzer direkt Feedback hat
+                            const el = document.getElementById('notif-' + id);
+                            if (el) {
+                                el.style.display = 'none';
+                            }
+
+                            fetch('/api/notifications/' + id + '/delete/', {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                                }
+                            }).then(response => {
+                                if (response.ok && el) {
+                                    el.remove();
+                                } else if (!response.ok && el) {
+                                    // Falls es einen Fehler gab, wieder einblenden
+                                    el.style.display = 'flex';
+                                }
+                            }).catch(() => {
+                                if (el) el.style.display = 'flex';
+                            });
+                        }
+
+                        document.addEventListener('click', function (event) {
+                            const wrapper = document.querySelector('.notification-wrapper');
+                            const dropdown = document.getElementById('notification-dropdown');
+                            if (wrapper && dropdown && !wrapper.contains(event.target)) {
+                                dropdown.style.display = 'none';
+                            }
+                        });
+                    </script>
+                    <div class="profile-menu-container" style="position: relative; display: inline-block;">
+                        <button type="button" class="profile-menu-trigger" onclick="toggleProfileMenu(event)" style="background: none; border: none; padding: 0; cursor: pointer; border-radius: 50%; overflow: hidden; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                            {% if request.user.profile_picture_url %}
+                                <img src="{{ request.user.profile_picture_url }}" id="header-profile-img" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                            {% else %}
+                                <span class="avatar" id="header-profile-avatar" style="margin: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800;">{{ request.user.username|first|upper }}</span>
+                            {% endif %}
+                        </button>
+                        <div id="profile-menu-dropdown" class="profile-menu-dropdown" style="display: none; position: absolute; right: 0; top: 48px; width: 220px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); z-index: 1000; padding: 8px 0; text-align: left;">
+                            <a href="#" onclick="openProfileModal(event)" class="profile-menu-item" style="display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: var(--text); text-decoration: none; font-size: 14px; transition: background 0.15s ease;">
+                                <span>👤</span> <span data-translate="profile">Profil</span>
+                            </a>
+                            <div class="profile-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 14px; color: var(--text); border-top: 1px solid var(--border);">
+                                <span data-translate="theme">Design:</span>
+                                <button type="button" class="lang-btn" id="dropdown-theme-toggle-btn" onclick="toggleTheme()" style="padding: 2px 8px; display: inline-flex; align-items: center; gap: 4px; border-radius: 4px;">
+                                    <span id="dropdown-theme-toggle-icon">☀️</span>
+                                    <span id="dropdown-theme-toggle-text" data-translate="theme_light">Hell</span>
+                                </button>
+                            </div>
+                            <div class="profile-menu-item" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; font-size: 14px; color: var(--text); border-top: 1px solid var(--border);">
+                                <span data-translate="language">Sprache:</span>
+                                <div style="display: flex; gap: 4px;">
+                                    <button type="button" class="lang-btn" data-lang="de" style="padding: 2px 6px; border-radius: 4px;">DE</button>
+                                    <button type="button" class="lang-btn" data-lang="en" style="padding: 2px 6px; border-radius: 4px;">EN</button>
+                                </div>
+                            </div>
+                            <form class="logout-form" method="post" action="{% url 'logout' %}" style="border-top: 1px solid var(--border); margin: 0; padding-top: 4px;">
+                                {% csrf_token %}
+                                <button type="submit" class="profile-menu-item" style="width: 100%; border: none; background: none; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 10px 16px; color: var(--red); font-size: 14px;">
+                                    <span>🚪</span> <span data-translate="logout">Logout</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <main class="page">
+                {% else %}
+                <div class="auth-shell">
+                    <header class="auth-header">
+                        <a class="brand" href="{% url 'login' %}">
+                            <span class="brand-mark">S</span>
+                            <span>Study-Management-Tool</span>
+                        </a>
+                    </header>
+                    <main>
+                        {% endif %}
+                        {% block content %}{% endblock %}
+
+                        <footer class="site-footer">
+                            <div class="footer-left">
+                                <span>&copy; 2026 Study-Management-Tool (SMT)</span>
+                                <a href="#" class="footer-link" data-translate="about" onclick="openAboutModal(event)">Über SMT</a>
+                                <a href="#" class="footer-link" data-translate="contact">Kontakt</a>
+                            </div>
+                            <div class="footer-right">
+                                <div class="footer-socials">
+                                    <a href="mailto:contact@smt.example.com" title="Mail" class="social-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                    </a>
+                                    <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" title="Facebook" class="social-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                                    </a>
+                                    <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" title="Instagram" class="social-icon">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+                                    </a>
+                                </div>
+                            </div>
+                        </footer>
+
+                        <!-- About SMT Modal -->
+                        <div id="about-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                            <div style="background: var(--surface, #ffffff); border: 1px solid var(--border); border-radius: 12px; max-width: 500px; width: 90%; padding: 30px; box-shadow: var(--shadow); position: relative; animation: popIn 0.3s ease-out;">
+                                <button type="button" onclick="closeAboutModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer;">✕</button>
+                                <h2 id="about-modal-title" style="margin-top: 0; margin-bottom: 16px; font-size: 22px; color: var(--text);">Über SMT</h2>
+                                <p id="about-modal-intro" style="font-size: 14px; line-height: 1.6; color: var(--text); margin-bottom: 16px;"></p>
+                                <h3 id="about-modal-heading" style="font-size: 16px; margin: 16px 0 8px 0; color: var(--text);"></h3>
+                                <ul id="about-modal-features" style="padding-left: 20px; margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: var(--text);"></ul>
+                                <div style="text-align: right; margin-top: 24px;">
+                                    <button type="button" onclick="closeAboutModal()" class="lang-btn active" id="about-modal-close-btn" style="padding: 8px 16px; font-size: 14px; border-radius: 6px;"></button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Profile Edit Modal -->
+                        <div id="profile-edit-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px); overflow-y: auto; padding: 20px 0;">
+                            <div style="background: var(--surface, #ffffff); border: 1px solid var(--border); border-radius: 12px; max-width: 450px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 30px; box-shadow: var(--shadow); position: relative; animation: popIn 0.3s ease-out;">
+                                <button type="button" onclick="closeProfileModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer;">✕</button>
+                                <h2 style="margin-top: 0; margin-bottom: 20px; font-size: 22px; color: var(--text);" data-translate="edit_profile_title">Profil bearbeiten</h2>
+                                
+                                <form id="profile-edit-form" onsubmit="saveProfile(event)" style="display: flex; flex-direction: column; gap: 16px;">
+                                    <!-- Profile picture upload area -->
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                        <div style="width: 100px; height: 100px; border-radius: 50%; overflow: hidden; border: 2px solid var(--blue); position: relative; background: var(--surface-soft); display: flex; align-items: center; justify-content: center;">
+                                            <img id="profile-modal-preview-img" src="{{ request.user.profile_picture_url|default:'' }}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: {% if request.user.profile_picture_url %}block{% else %}none{% endif %};">
+                                            <span id="profile-modal-preview-avatar" style="font-size: 32px; font-weight: 800; color: var(--blue); display: {% if request.user.profile_picture_url %}none{% else %}flex{% endif %};">{{ request.user.username|first|upper }}</span>
+                                        </div>
+                                        <label class="lang-btn active" style="padding: 6px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; display: inline-block;">
+                                            <span data-translate="upload_photo">Bild hochladen</span>
+                                            <input type="file" id="profile-pic-input" accept="image/*" onchange="previewProfilePic(event)" style="display: none;">
+                                        </label>
+                                    </div>
+
+                                    <!-- Cropper Container -->
+                                    <div id="cropper-wrap" style="display: none; flex-direction: column; align-items: center; gap: 8px; border: 1px dashed var(--border); padding: 10px; border-radius: 8px; background: var(--surface-muted); margin-bottom: 10px;">
+                                        <div style="max-width: 100%; max-height: 200px; overflow: hidden; border-radius: 4px;">
+                                            <img id="cropper-image" style="max-width: 100%; display: block;">
+                                        </div>
+                                        <small style="color: var(--muted); font-size: 11px; text-align: center;" data-translate="crop_hint">Bewege den Rahmen, um dein Gesicht zu zentrieren</small>
+                                    </div>
+
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <label style="font-size: 13px; font-weight: 600; color: var(--text);" data-translate="first_name">Vorname</label>
+                                        <input type="text" id="profile-first-name" value="{{ request.user.first_name }}" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); width: 100%; font-size: 14px;">
+                                    </div>
+
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <label style="font-size: 13px; font-weight: 600; color: var(--text);" data-translate="last_name">Nachname</label>
+                                        <input type="text" id="profile-last-name" value="{{ request.user.last_name }}" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); width: 100%; font-size: 14px;">
+                                    </div>
+
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <label style="font-size: 13px; font-weight: 600; color: var(--text);" data-translate="email_label">E-Mail</label>
+                                        <input type="email" id="profile-email" value="{{ request.user.email }}" style="padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); width: 100%; font-size: 14px;">
+                                    </div>
+
+                                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                                        <button type="button" onclick="closeProfileModal()" class="lang-btn" style="padding: 8px 16px; font-size: 14px; border-radius: 6px;" data-translate="cancel">Abbrechen</button>
+                                        <button type="submit" class="lang-btn active" style="padding: 8px 16px; font-size: 14px; border-radius: 6px;" data-translate="save">Speichern</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        {% if request.user.is_authenticated %}
+                    </main>
+                </div>
+        </div>
+        {% else %}
+        </main>
+    </div>
+    {% endif %}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInputs = document.querySelectorAll('.toolbar-search input[name="q"], .search-box input[name="q"]');
+
+            searchInputs.forEach(input => {
+                input.setAttribute('autocomplete', 'off');
+
+                const container = input.closest('.toolbar-search, .search-box');
+                if (!container) return;
+
+                container.style.position = 'relative';
+
+                const dropdown = document.createElement('div');
+                dropdown.className = 'autocomplete-suggestions';
+                dropdown.style.display = 'none';
+                container.appendChild(dropdown);
+
+                let debounceTimer;
+                let activeIndex = -1;
+                let items = [];
+
+                input.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    const query = input.value.trim();
+
+                    if (query.length < 1) {
+                        dropdown.style.display = 'none';
+                        dropdown.innerHTML = '';
+                        activeIndex = -1;
+                        return;
+                    }
+
+                    debounceTimer = setTimeout(() => {
+                        fetch(`/api/materials/search/?q=${encodeURIComponent(query)}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                items = data;
+                                activeIndex = -1;
+                                if (items.length === 0) {
+                                    dropdown.style.display = 'none';
+                                    dropdown.innerHTML = '';
+                                    return;
+                                }
+
+                                dropdown.innerHTML = '';
+                                items.forEach((item, index) => {
+                                    const div = document.createElement('div');
+                                    div.className = 'autocomplete-suggestion';
+
+                                    const title = document.createElement('span');
+                                    title.className = 'autocomplete-suggestion-title';
+                                    title.textContent = item.title;
+
+                                    const meta = document.createElement('span');
+                                    meta.className = 'autocomplete-suggestion-meta';
+                                    meta.textContent = `${item.module_name} • ${item.page_count} Seiten`;
+
+                                    div.appendChild(title);
+                                    div.appendChild(meta);
+
+                                    div.addEventListener('click', () => {
+                                        input.value = item.title;
+                                        dropdown.style.display = 'none';
+                                        input.form.submit();
+                                    });
+
+                                    dropdown.appendChild(div);
+                                });
+                                dropdown.style.display = 'block';
+                            })
+                            .catch(err => console.error('Error fetching suggestions:', err));
+                    }, 150);
+                });
+
+                input.addEventListener('keydown', function (e) {
+                    const divs = dropdown.querySelectorAll('.autocomplete-suggestion');
+                    if (dropdown.style.display === 'none' || divs.length === 0) return;
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (activeIndex < divs.length - 1) {
+                            if (activeIndex >= 0) divs[activeIndex].classList.remove('active');
+                            activeIndex++;
+                            divs[activeIndex].classList.add('active');
+                            divs[activeIndex].scrollIntoView({ block: 'nearest' });
+                        }
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (activeIndex > 0) {
+                            divs[activeIndex].classList.remove('active');
+                            activeIndex--;
+                            divs[activeIndex].classList.add('active');
+                            divs[activeIndex].scrollIntoView({ block: 'nearest' });
+                        }
+                    } else if (e.key === 'Enter') {
+                        if (activeIndex >= 0) {
+                            e.preventDefault();
+                            divs[activeIndex].click();
+                        }
+                    } else if (e.key === 'Escape') {
+                        dropdown.style.display = 'none';
+                        activeIndex = -1;
+                    }
+                });
+
+                document.addEventListener('click', function (e) {
+                    if (!container.contains(e.target)) {
+                        dropdown.style.display = 'none';
+                        activeIndex = -1;
+                    }
+                });
+            });
+        });
+    </script>
+    <div id="motivation-modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; text-align: center; color: white; cursor: pointer;">
+        <div style="animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; transform: scale(0);">
+            <h2 id="motivation-message"
+                style="margin-bottom: 25px; font-size: 2.2rem; text-shadow: 0 2px 10px rgba(255,255,255,0.3); color: #ffd700;">
+            </h2>
+            <img id="motivation-img" src="" alt="Motivation"
+                style="max-width: 80%; max-height: 65vh; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 4px solid #fff;">
+            <p style="margin-top: 20px; font-size: 14px; opacity: 0.6; letter-spacing: 1px; text-transform: uppercase;">
+                Klicke irgendwo, um weiterzumachen</p>
+        </div>
+    </div>
+
+    <style>
+        @keyframes popIn {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        function showMotivationPopup(message, redirectUrl = null) {
+            const dropdown = document.getElementById('notification-dropdown');
+            if (dropdown) dropdown.style.display = 'none';
+
+            let imageNames = [];
+            try {
+                let parsed = {{ motivation_images|default:"[]"|safe }};
+                if (Array.isArray(parsed)) {
+                    imageNames = parsed;
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            
+            const staticUrl = "{% static '' %}";
+
+            let randomImage = "";
+            if (imageNames && imageNames.length > 0) {
+                const randomName = imageNames[Math.floor(Math.random() * imageNames.length)];
+                randomImage = staticUrl + randomName;
+            } else {
+                randomImage = "{% static 'motivation.png' %}";
+            }
+
+            document.getElementById('motivation-img').src = randomImage;
+            document.getElementById('motivation-message').innerText = message;
+            
+            const modal = document.getElementById('motivation-modal');
+            modal.style.display = 'flex';
+            
+            modal.onclick = function() {
+                modal.style.display = 'none';
+                if (redirectUrl) {
+                    window.location.href = redirectUrl;
+                }
+            };
+        }
+    </script>
+
+    {% if messages %}
+    <script>
+        {% for message in messages %}
+            showMotivationPopup('{{ message|escapejs }}');
+        {% endfor %}
+    </script>
+    {% endif %}
+
+    <script>
+        const translationDictionary = {
+            de: {
+                'dashboard': 'Dashboard',
+                'modules': 'Module',
+                'lectures': 'Vorlesungen',
+                'tasks': 'Aufgaben',
+                'deadlines': 'Abgaben & Prüfungen',
+                'plans': 'Lernpläne',
+                'progress': 'Fortschritt',
+                'materials': 'PDF-Unterlagen',
+                'search': 'Suche',
+                'logout': 'Logout',
+                'about': 'Über SMT',
+                'contact': 'Kontakt',
+                'language': 'Sprache:',
+                'search_placeholder': 'PDF-Inhalte durchsuchen ...',
+                'search_materials_placeholder': 'Unterlagen durchsuchen...',
+                'welcome_back': 'Willkommen zurück,',
+                'overview_week': 'Hier ist dein Überblick für diese Woche.',
+                'keep_track': 'Behalte Aufgaben, Termine, Lernzeit und Unterlagen an einem Ort im Blick.',
+                'about_title': 'Über SMT',
+                'about_intro': 'Das <strong>Study-Management-Tool (SMT)</strong> ist dein persönlicher Assistent für das Studium. Es hilft dir dabei, deinen Studienalltag optimal zu strukturieren und all deine Lernziele stressfrei zu erreichen.',
+                'about_heading': 'Was du mit SMT tun kannst:',
+                'about_features': `<li><strong>Module & Vorlesungen verwalten:</strong> Behalte Kurse, Dozenten und einzelne Termine im Blick.</li>
+                    <li><strong>Aufgaben & Deadlines verfolgen:</strong> Verpasse keine Hausaufgaben, Projekttermine oder Klausuren mehr.</li>
+                    <li><strong>Lernpläne erstellen:</strong> Plane deine Lernsitzungen und vergleiche deine geplante Zeit mit deiner tatsächlichen Lernzeit.</li>
+                    <li><strong>PDF-Unterlagen durchsuchen:</strong> Lade Skripte oder Mitschriften hoch und durchsuche deren Inhalte blitzschnell.</li>`,
+                'about_close': 'Schließen',
+                'theme': 'Design:',
+                'theme_light': 'Hell',
+                'theme_dark': 'Dunkel',
+                'profile': 'Profil',
+                'edit_profile_title': 'Profil bearbeiten',
+                'upload_photo': 'Bild hochladen',
+                'first_name': 'Vorname',
+                'last_name': 'Nachname',
+                'email_label': 'E-Mail',
+                'cancel': 'Abbrechen',
+                'save': 'Speichern'
+            },
+            en: {
+                'dashboard': 'Dashboard',
+                'modules': 'Modules',
+                'lectures': 'Lectures',
+                'tasks': 'Tasks',
+                'deadlines': 'Deadlines & Exams',
+                'plans': 'Study Plans',
+                'progress': 'Progress',
+                'materials': 'PDF Materials',
+                'search': 'Search',
+                'logout': 'Logout',
+                'about': 'About SMT',
+                'contact': 'Contact Us',
+                'language': 'Language:',
+                'search_placeholder': 'Search PDF content ...',
+                'search_materials_placeholder': 'Search materials...',
+                'welcome_back': 'Welcome back,',
+                'overview_week': 'Here is your overview for this week.',
+                'keep_track': 'Keep track of tasks, appointments, study time and documents in one place.',
+                'about_title': 'About SMT',
+                'about_intro': 'The <strong>Study-Management-Tool (SMT)</strong> is your personal study assistant. It helps you structure your daily study routines optimally and reach all your learning goals stress-free.',
+                'about_heading': 'What you can do with SMT:',
+                'about_features': `<li><strong>Manage Modules & Lectures:</strong> Keep track of courses, lecturers, and individual class times.</li>
+                    <li><strong>Track Tasks & Deadlines:</strong> Never miss homework, project deadlines, or exams.</li>
+                    <li><strong>Create Study Plans:</strong> Plan your study sessions and compare your planned time against your actual study time.</li>
+                    <li><strong>Search PDF Documents:</strong> Upload lecture slides or notes and search through their content instantly.</li>`,
+                'about_close': 'Close',
+                'theme': 'Theme:',
+                'theme_light': 'Light',
+                'theme_dark': 'Dark',
+                'profile': 'Profile',
+                'edit_profile_title': 'Edit Profile',
+                'upload_photo': 'Upload Photo',
+                'first_name': 'First Name',
+                'last_name': 'Last Name',
+                'email_label': 'Email',
+                'cancel': 'Cancel',
+                'save': 'Save',
+                'crop_hint': 'Drag the frame to center your face'
+            }
+        };
+ 
+        let base64ProfilePic = '';
+        let cropperInstance = null;
+ 
+        function toggleProfileMenu(e) {
+            if (e) e.stopPropagation();
+            const dropdown = document.getElementById('profile-menu-dropdown');
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+ 
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('profile-menu-dropdown');
+            const trigger = document.querySelector('.profile-menu-trigger');
+            if (dropdown && trigger && !trigger.contains(event.target) && !dropdown.contains(event.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+ 
+        function openProfileModal(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            document.getElementById('profile-menu-dropdown').style.display = 'none';
+            document.getElementById('profile-edit-modal').style.display = 'flex';
+        }
+ 
+        function closeProfileModal() {
+            document.getElementById('profile-edit-modal').style.display = 'none';
+            if (cropperInstance) {
+                cropperInstance.destroy();
+                cropperInstance = null;
+            }
+            document.getElementById('cropper-wrap').style.display = 'none';
+            document.getElementById('profile-pic-input').value = '';
+        }
+ 
+        function previewProfilePic(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const cropperWrap = document.getElementById('cropper-wrap');
+                    const cropperImage = document.getElementById('cropper-image');
+                    
+                    if (cropperInstance) {
+                        cropperInstance.destroy();
+                    }
+                    
+                    cropperImage.src = e.target.result;
+                    cropperWrap.style.display = 'flex';
+                    
+                    // Initialize Cropper.js
+                    cropperInstance = new Cropper(cropperImage, {
+                        aspectRatio: 1, // Force square selection
+                        viewMode: 1,
+                        autoCropArea: 0.8,
+                        background: false,
+                        responsive: true,
+                        zoomable: true,
+                        movable: true
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+ 
+        function saveProfile(event) {
+            if (event) event.preventDefault();
+            
+            const firstName = document.getElementById('profile-first-name').value;
+            const lastName = document.getElementById('profile-last-name').value;
+            const email = document.getElementById('profile-email').value;
+ 
+            const payload = {
+                first_name: firstName,
+                last_name: lastName,
+                email: email
+            };
+ 
+            // Get cropped image data if cropper is active
+            if (cropperInstance) {
+                base64ProfilePic = cropperInstance.getCroppedCanvas({
+                    width: 200,
+                    height: 200
+                }).toDataURL('image/jpeg', 0.85); // High quality JPEG output
+                payload.profile_picture_url = base64ProfilePic;
+            }
+ 
+            fetch('/api/auth/profile/update/', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to update profile');
+                }
+            })
+            .then(data => {
+                // Update header image or avatar letter
+                const headerImg = document.getElementById('header-profile-img');
+                const headerAvatar = document.getElementById('header-profile-avatar');
+                const triggerBtn = document.querySelector('.profile-menu-trigger');
+ 
+                if (data.profile_picture_url) {
+                    if (headerImg) {
+                        headerImg.src = data.profile_picture_url;
+                        headerImg.style.display = 'block';
+                    } else if (triggerBtn) {
+                        if (headerAvatar) headerAvatar.remove();
+                        const img = document.createElement('img');
+                        img.id = 'header-profile-img';
+                        img.src = data.profile_picture_url;
+                        img.alt = 'Profile';
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'cover';
+                        img.style.borderRadius = '50%';
+                        triggerBtn.appendChild(img);
+                    }
+                }
+                closeProfileModal();
+            })
+            .catch(error => {
+                alert('Fehler beim Speichern: ' + error.message);
+            });
+        }
+
+        function setTheme(theme) {
+            localStorage.setItem('smt_theme', theme);
+            const btns = [document.getElementById('theme-toggle-btn'), document.getElementById('dropdown-theme-toggle-btn')];
+            const icons = [document.getElementById('theme-toggle-icon'), document.getElementById('dropdown-theme-toggle-icon')];
+            const texts = [document.getElementById('theme-toggle-text'), document.getElementById('dropdown-theme-toggle-text')];
+            const currentLang = localStorage.getItem('smt_lang') || 'de';
+
+            if (theme === 'dark') {
+                document.body.classList.add('dark-theme');
+                icons.forEach(icon => { if (icon) icon.innerText = '🌙'; });
+                texts.forEach(text => {
+                    if (text) {
+                        text.setAttribute('data-translate', 'theme_dark');
+                        text.innerText = currentLang === 'en' ? 'Dark' : 'Dunkel';
+                    }
+                });
+            } else {
+                document.body.classList.remove('dark-theme');
+                icons.forEach(icon => { if (icon) icon.innerText = '☀️'; });
+                texts.forEach(text => {
+                    if (text) {
+                        text.setAttribute('data-translate', 'theme_light');
+                        text.innerText = currentLang === 'en' ? 'Light' : 'Hell';
+                    }
+                });
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('smt_theme') || 'light';
+            setTheme(currentTheme === 'light' ? 'dark' : 'light');
+        }
+
+        function setLanguage(lang) {
+            localStorage.setItem('smt_lang', lang);
+            
+            // Toggle active class on lang-btn buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                if (btn.getAttribute('data-lang') === lang) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Translate elements marked with data-translate
+            document.querySelectorAll('[data-translate]').forEach(el => {
+                const key = el.getAttribute('data-translate');
+                if (key === 'welcome_back') {
+                    const text = el.innerText;
+                    const commaIndex = text.indexOf(',');
+                    if (commaIndex !== -1) {
+                        const name = text.substring(commaIndex + 1);
+                        el.innerText = (translationDictionary[lang][key] || 'Welcome back,') + name;
+                    } else {
+                        el.innerText = translationDictionary[lang][key];
+                    }
+                } else if (translationDictionary[lang] && translationDictionary[lang][key]) {
+                    el.innerText = translationDictionary[lang][key];
+                }
+            });
+
+            // Translate placeholders
+            document.querySelectorAll('[data-translate-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-translate-placeholder');
+                if (translationDictionary[lang] && translationDictionary[lang][key]) {
+                    el.setAttribute('placeholder', translationDictionary[lang][key]);
+                }
+            });
+
+            // Translate About Modal specifically
+            const titleEl = document.getElementById('about-modal-title');
+            const introEl = document.getElementById('about-modal-intro');
+            const headingEl = document.getElementById('about-modal-heading');
+            const featuresEl = document.getElementById('about-modal-features');
+            const closeBtn = document.getElementById('about-modal-close-btn');
+
+            if (titleEl) titleEl.innerText = translationDictionary[lang]['about_title'];
+            if (introEl) introEl.innerHTML = translationDictionary[lang]['about_intro'];
+            if (headingEl) headingEl.innerText = translationDictionary[lang]['about_heading'];
+            if (featuresEl) featuresEl.innerHTML = translationDictionary[lang]['about_features'];
+            if (closeBtn) closeBtn.innerText = translationDictionary[lang]['about_close'];
+
+            // Comprehensive selector-based translation mapping
+            const selectorsMap = {
+                de: {
+                    '.metric-card:nth-child(1) .metric-label': 'Module',
+                    '.metric-card:nth-child(2) .metric-label': 'Offene Aufgaben',
+                    '.metric-card:nth-child(3) .metric-label': 'Überfällige Punkte',
+                    '.metric-card:nth-child(4) .metric-label': 'Lernzeit diese Woche',
+                    '.week-header h2': 'Woche im Überblick',
+                    '.panel-link[href*="calendar"]': 'Zum vollständigen Kalender →',
+                    '.middle-right-stack article:nth-child(1) h2': 'Fortschritt',
+                    '.progress-row:nth-child(2) .progress-label span': 'Erledigte Aufgaben',
+                    '.progress-row:nth-child(3) .progress-label span': 'Lernzeit-Ziel diese Woche',
+                    '.middle-right-stack article:nth-child(2) h2': 'Aufgabenstatus',
+                    '.middle-right-stack article:nth-child(2) .panel-heading .metric-note': 'Diese Woche',
+                    '.donut-center span': 'Gesamt',
+                    '.dashboard-bottom article:nth-child(1) h2': 'Meine Module',
+                    '.dashboard-bottom article:nth-child(1) .panel-heading .panel-link': 'Alle Module',
+                    '.dashboard-bottom article:nth-child(1) .empty-state': 'Noch keine Module angelegt.',
+                    '.dashboard-bottom article:nth-child(2) h2': 'Kommende Termine',
+                    '.dashboard-bottom article:nth-child(2) .panel-heading .panel-link': 'Alle anzeigen',
+                    '.dashboard-bottom article:nth-child(2) .panel-link:last-child': 'Weitere Termine anzeigen',
+                    '.dashboard-bottom article:nth-child(2) .empty-state': 'Keine Termine in den nächsten 14 Tagen.',
+                    '.dashboard-bottom article:nth-child(3) h2': 'PDF-Unterlagen',
+                    '.dashboard-bottom article:nth-child(3) .panel-heading .panel-link': 'Alle anzeigen',
+                    '.dashboard-bottom article:nth-child(3) .empty-state': 'Noch keine PDF-Unterlagen hochgeladen.',
+                    
+                    '.page-header h1': 'Meine Module',
+                    '.btn-primary': 'Neues Modul',
+                    '.module-card-lecturer': 'Dozent:',
+                    '.module-card-semester': 'Semester:',
+                    '.tasks-header h1': 'Aufgaben',
+                    '.btn-add-task': 'Neue Aufgabe',
+                    '.deadlines-header h1': 'Abgaben & Prüfungen',
+                    '.progress-header h1': 'Lernfortschritt',
+                    '.materials-header h1': 'PDF-Unterlagen',
+                    '.btn-upload': 'Dokument hochladen',
+                    '.calendar-header h1': 'Studienkalender'
+                },
+                en: {
+                    '.metric-card:nth-child(1) .metric-label': 'Modules',
+                    '.metric-card:nth-child(2) .metric-label': 'Open Tasks',
+                    '.metric-card:nth-child(3) .metric-label': 'Overdue Items',
+                    '.metric-card:nth-child(4) .metric-label': 'Study Time This Week',
+                    '.week-header h2': 'Week Overview',
+                    '.panel-link[href*="calendar"]': 'To full calendar →',
+                    '.middle-right-stack article:nth-child(1) h2': 'Progress',
+                    '.progress-row:nth-child(2) .progress-label span': 'Completed Tasks',
+                    '.progress-row:nth-child(3) .progress-label span': 'Weekly Study Goal',
+                    '.middle-right-stack article:nth-child(2) h2': 'Task Status',
+                    '.middle-right-stack article:nth-child(2) .panel-heading .metric-note': 'This Week',
+                    '.donut-center span': 'Total',
+                    '.dashboard-bottom article:nth-child(1) h2': 'My Modules',
+                    '.dashboard-bottom article:nth-child(1) .panel-heading .panel-link': 'All Modules',
+                    '.dashboard-bottom article:nth-child(1) .empty-state': 'No modules created yet.',
+                    '.dashboard-bottom article:nth-child(2) h2': 'Upcoming Deadlines',
+                    '.dashboard-bottom article:nth-child(2) .panel-heading .panel-link': 'Show All',
+                    '.dashboard-bottom article:nth-child(2) .panel-link:last-child': 'Show More Deadlines',
+                    '.dashboard-bottom article:nth-child(2) .empty-state': 'No upcoming deadlines in the next 14 days.',
+                    '.dashboard-bottom article:nth-child(3) h2': 'PDF Documents',
+                    '.dashboard-bottom article:nth-child(3) .panel-heading .panel-link': 'Show All',
+                    '.dashboard-bottom article:nth-child(3) .empty-state': 'No PDF documents uploaded yet.',
+                    
+                    '.page-header h1': 'My Modules',
+                    '.btn-primary': 'New Module',
+                    '.module-card-lecturer': 'Lecturer:',
+                    '.module-card-semester': 'Semester:',
+                    '.tasks-header h1': 'Tasks',
+                    '.btn-add-task': 'New Task',
+                    '.deadlines-header h1': 'Deadlines & Exams',
+                    '.progress-header h1': 'Study Progress',
+                    '.materials-header h1': 'PDF Documents',
+                    '.btn-upload': 'Upload Document',
+                    '.calendar-header h1': 'Study Calendar'
+                }
+            };
+
+            if (selectorsMap[lang]) {
+                for (const selector in selectorsMap[lang]) {
+                    document.querySelectorAll(selector).forEach(el => {
+                        el.innerText = selectorsMap[lang][selector];
+                    });
+                }
+            }
+
+            // Translate status row text
+            document.querySelectorAll('.status-list .status-row span:nth-child(2)').forEach(el => {
+                const text = el.innerText.trim();
+                const statusMap = {
+                    de: { 'Erledigt': 'Erledigt', 'In Bearbeitung': 'In Bearbeitung', 'Offen': 'Offen', 'Überfällig': 'Überfällig', 'Completed': 'Erledigt', 'In Progress': 'In Bearbeitung', 'Not Started': 'Offen', 'Overdue': 'Überfällig' },
+                    en: { 'Erledigt': 'Completed', 'In Bearbeitung': 'In Progress', 'Offen': 'Not Started', 'Überfällig': 'Overdue', 'Completed': 'Completed', 'In Progress': 'In Progress', 'Not Started': 'Not Started', 'Overdue': 'Overdue' }
+                };
+                if (statusMap[lang] && statusMap[lang][text]) {
+                    el.innerText = statusMap[lang][text];
+                }
+            });
+
+            // Translate badges
+            document.querySelectorAll('.event-item .badge').forEach(el => {
+                const text = el.innerText.trim();
+                const badgeMap = {
+                    de: { 'Lernplan': 'Lernplan', 'Prüfung': 'Prüfung', 'Vorlesung': 'Vorlesung', 'Aufgabe': 'Aufgabe', 'Study Plan': 'Lernplan', 'Exam': 'Prüfung', 'Lecture': 'Vorlesung', 'Task': 'Aufgabe' },
+                    en: { 'Lernplan': 'Study Plan', 'Prüfung': 'Exam', 'Vorlesung': 'Lecture', 'Aufgabe': 'Task', 'Study Plan': 'Study Plan', 'Exam': 'Exam', 'Lecture': 'Lecture', 'Task': 'Task' }
+                };
+                if (badgeMap[lang] && badgeMap[lang][text]) {
+                    el.innerText = badgeMap[lang][text];
+                }
+            });
+
+            // Translate weekday labels
+            document.querySelectorAll('.week-day-label').forEach(el => {
+                const text = el.innerText.trim().toUpperCase();
+                const dayMap = {
+                    de: { 'MO': 'MO', 'DI': 'DI', 'MI': 'MI', 'DO': 'DO', 'FR': 'FR', 'SA': 'SA', 'SO': 'SO', 'MON': 'MO', 'TUE': 'DI', 'WED': 'MI', 'THU': 'DO', 'FRI': 'FR', 'SAT': 'SA', 'SUN': 'SO' },
+                    en: { 'MO': 'MON', 'DI': 'TUE', 'MI': 'WED', 'DO': 'THU', 'FR': 'FRI', 'SA': 'SAT', 'SO': 'SUN', 'MON': 'MON', 'TUE': 'TUE', 'WED': 'WED', 'THU': 'THU', 'FRI': 'FRI', 'SAT': 'SAT', 'SUN': 'SUN' }
+                };
+                if (dayMap[lang] && dayMap[lang][text]) {
+                    el.innerText = dayMap[lang][text];
+                }
+            });
+
+            // Translate table headers
+            const tableHeaderMap = {
+                de: {
+                    'Titel': 'Titel', 'Modul': 'Modul', 'Datum': 'Datum', 'Größe': 'Größe', 'Aktionen': 'Aktionen',
+                    'Aufgabe': 'Aufgabe', 'Status': 'Status', 'Priorität': 'Priorität', 'Fälligkeit': 'Fälligkeit',
+                    'Typ': 'Typ', 'Semester': 'Semester', 'Dozent': 'Dozent'
+                },
+                en: {
+                    'Titel': 'Title', 'Modul': 'Module', 'Datum': 'Date', 'Größe': 'Size', 'Aktionen': 'Actions',
+                    'Aufgabe': 'Task', 'Status': 'Status', 'Priorität': 'Priority', 'Fälligkeit': 'Due Date',
+                    'Typ': 'Type', 'Semester': 'Semester', 'Dozent': 'Lecturer',
+                    'Title': 'Title', 'Module': 'Module', 'Date': 'Date', 'Size': 'Size', 'Actions': 'Actions',
+                    'Task': 'Task', 'Priority': 'Priority', 'Due Date': 'Due Date',
+                    'Type': 'Type', 'Semester': 'Semester', 'Lecturer': 'Lecturer'
+                }
+            };
+            document.querySelectorAll('th').forEach(el => {
+                const text = el.innerText.trim();
+                if (tableHeaderMap[lang] && tableHeaderMap[lang][text]) {
+                    el.innerText = tableHeaderMap[lang][text];
+                }
+            });
+
+            // Translate metric and progress notes containing "von", "Ziel", etc.
+            document.querySelectorAll('.metric-note').forEach(el => {
+                let text = el.innerText.trim();
+                if (lang === 'en') {
+                    text = text.replace(/von/gi, 'of')
+                               .replace(/Aufgaben erledigt/gi, 'tasks completed')
+                               .replace(/Ziel/gi, 'target')
+                               .replace(/fällig in 7 Tagen/gi, 'due in 7 days')
+                               .replace(/Modulen aktiv/gi, 'modules active')
+                               .replace(/Aufgaben und Termine/gi, 'tasks and deadlines');
+                } else {
+                    text = text.replace(/of/gi, 'von')
+                               .replace(/tasks completed/gi, 'Aufgaben erledigt')
+                               .replace(/target/gi, 'Ziel')
+                               .replace(/due in 7 days/gi, 'fällig in 7 Tagen')
+                               .replace(/modules active/gi, 'Modulen aktiv')
+                               .replace(/tasks and deadlines/gi, 'Aufgaben und Termine');
+                }
+                el.innerText = text;
+            });
+        }
+
+        function openAboutModal(e) {
+            if (e) e.preventDefault();
+            document.getElementById('about-modal').style.display = 'flex';
+        }
+
+        function closeAboutModal() {
+            document.getElementById('about-modal').style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedLang = localStorage.getItem('smt_lang') || 'de';
+            setLanguage(savedLang);
+
+            const savedTheme = localStorage.getItem('smt_theme') || 'light';
+            setTheme(savedTheme);
+
+            // Bind click handlers to lang buttons
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                if (btn.getAttribute('data-lang')) {
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const newLang = this.getAttribute('data-lang');
+                        setLanguage(newLang);
+                        
+                        // Refresh theme button text translation
+                        const savedTheme = localStorage.getItem('smt_theme') || 'light';
+                        setTheme(savedTheme);
+                    });
+                }
+            });
+        });
+    </script>
+    <!-- Cropper.js JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}PDF-Unterlage löschen | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">PDF-Unterlagen</p>
+        <h1>PDF-Unterlage löschen</h1>
+        <p class="muted">Diese Aktion entfernt die Unterlage aus deiner Sammlung.</p>
+    </div>
+</div>
+
+<form class="danger-panel" method="post">
+    {% csrf_token %}
+    <h2>{{ material.title }}</h2>
+    <p class="muted">Möchtest du diese PDF-Unterlage wirklich löschen?</p>
+    <div class="form-actions">
+        <button class="danger-button" type="submit">Endgültig löschen</button>
+        <a class="secondary-button" href="{% url 'ui-material-list' %}">Abbrechen</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Module | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Module & Vorlesungen</p>
+        <h1>Module</h1>
+        <p class="muted">Verwalte deine Studienmodule und springe direkt in die zugehörigen Vorlesungen.</p>
+    </div>
+    <div class="page-actions">
+        <a class="secondary-button" href="{% url 'ui-lecture-list' %}">Alle Vorlesungen</a>
+        <a class="action-button" href="{% url 'ui-module-create' %}">Modul erstellen</a>
+    </div>
+</div>
+
+<section class="stat-strip" aria-label="Modul-Kennzahlen">
+    <div class="stat-card">
+        <strong>{{ module_count }}</strong>
+        <span>Module</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ lecture_count }}</strong>
+        <span>Vorlesungen</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ query|default:"-" }}</strong>
+        <span>aktuelle Suche</span>
+    </div>
+</section>
+
+<form class="toolbar" method="get">
+    <label class="toolbar-search">
+        <span aria-hidden="true">S</span>
+        <input type="search" name="q" value="{{ query }}" placeholder="Module durchsuchen..." aria-label="Module durchsuchen">
+    </label>
+    <button class="secondary-button" type="submit">Suchen</button>
+</form>
+
+{% if modules %}
+    <section class="resource-grid" aria-label="Module">
+        {% for module in modules %}
+            <article class="resource-card">
+                <a class="resource-card-header" href="{% url 'ui-module-detail' module.id %}">
+                    <span class="resource-icon">{{ module.name|first|upper }}</span>
+                    <div>
+                        <div class="resource-title">{{ module.name }}</div>
+                        <div class="resource-meta">
+                            {% if module.semester %}{{ module.semester }}{% else %}Ohne Semester{% endif %}
+                            {% if module.lecturer %} - {{ module.lecturer }}{% endif %}
+                        </div>
+                    </div>
+                </a>
+                <p class="resource-description">
+                    {% if module.description %}
+                        {{ module.description|truncatechars:120 }}
+                    {% else %}
+                        Noch keine Beschreibung hinterlegt.
+                    {% endif %}
+                </p>
+                <div class="resource-meta">{{ module.lecture_total }} Vorlesungen</div>
+                <div class="resource-actions">
+                    <a class="secondary-button" href="{% url 'ui-module-detail' module.id %}">Öffnen</a>
+                    <a class="secondary-button" href="{% url 'ui-module-update' module.id %}">Bearbeiten</a>
+                    <a class="danger-link" href="{% url 'ui-module-delete' module.id %}">Löschen</a>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+{% else %}
+    <div class="empty-state">Noch keine Module gefunden.</div>
+{% endif %}
+{% endblock %}

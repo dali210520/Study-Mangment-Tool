@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Termin löschen | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Abgaben & Prüfungen</p>
+        <h1>Termin löschen</h1>
+        <p class="muted">Diese Aktion entfernt die Abgabe oder Prüfung dauerhaft aus deiner Liste.</p>
+    </div>
+</div>
+
+<form class="danger-panel" method="post">
+    {% csrf_token %}
+    <h2>{{ deadline.title }}</h2>
+    <p class="muted">Möchtest du diesen Termin wirklich löschen?</p>
+    <div class="form-actions">
+        <button class="danger-button" type="submit">Endgültig löschen</button>
+        <a class="secondary-button" href="{% url 'ui-deadline-list' %}">Abbrechen</a>
+    </div>
+</form>
+{% endblock %}

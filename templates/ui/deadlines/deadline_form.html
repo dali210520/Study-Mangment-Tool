@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Abgaben & Prüfungen</p>
+        <h1>{{ page_title }}</h1>
+        <p class="muted">Pflege Art, Modul, Datum, Status und Notizen für wichtige Studien-Termine.</p>
+    </div>
+    <div class="page-actions">
+        <a class="secondary-button" href="{% url 'ui-deadline-list' %}">Abbrechen</a>
+    </div>
+</div>
+
+<form class="form-panel form-grid" method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+        <div class="field">
+            {{ field.label_tag }}
+            {{ field }}
+            {{ field.errors }}
+        </div>
+    {% endfor %}
+    <div class="form-actions">
+        <button class="action-button" type="submit">{{ submit_label }}</button>
+        <a class="secondary-button" href="{% url 'ui-deadline-list' %}">Zurück</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Lernplan löschen | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Lernpläne</p>
+        <h1>Lernplan löschen</h1>
+        <p class="muted">Diese Aktion entfernt den Lernplan-Eintrag dauerhaft aus deiner Liste.</p>
+    </div>
+</div>
+
+<form class="danger-panel" method="post">
+    {% csrf_token %}
+    <h2>{{ entry.topic }}</h2>
+    <p class="muted">Möchtest du diesen Lernplan-Eintrag wirklich löschen?</p>
+    <div class="form-actions">
+        <button class="danger-button" type="submit">Endgültig löschen</button>
+        <a class="secondary-button" href="{% url 'ui-plan-list' %}">Abbrechen</a>
+    </div>
+</form>
+{% endblock %}

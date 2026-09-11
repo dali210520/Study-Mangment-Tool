@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Aufgabe löschen | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Aufgabenmanagement</p>
+        <h1>Aufgabe löschen</h1>
+        <p class="muted">Diese Aktion entfernt die Aufgabe dauerhaft aus deiner Liste.</p>
+    </div>
+</div>
+
+<form class="danger-panel" method="post">
+    {% csrf_token %}
+    <h2>{{ task.title }}</h2>
+    <p class="muted">Möchtest du diese Aufgabe wirklich löschen?</p>
+    <div class="form-actions">
+        <button class="danger-button" type="submit">Endgültig löschen</button>
+        <a class="secondary-button" href="{% url 'ui-task-list' %}">Abbrechen</a>
+    </div>
+</form>
+{% endblock %}

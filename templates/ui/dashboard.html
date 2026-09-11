@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Study Management Tool{% endblock %}
+
+{% block content %}
+<section class="dashboard-top" aria-label="Dashboard Kennzahlen">
+    <article class="welcome-panel">
+        <div>
+            <p class="eyebrow" data-translate="welcome_back">Willkommen zurück, {{ request.user.first_name|default:request.user.username }}!</p>
+            <h2 data-translate="overview_week">Hier ist dein Überblick für diese Woche.</h2>
+            <p class="muted" data-translate="keep_track">Behalte Aufgaben, Termine, Lernzeit und Unterlagen an einem Ort im Blick.</p>
+        </div>
+        <div class="student-art" aria-hidden="true">
+            <div class="student-head"></div>
+            <div class="student-body"></div>
+            <div class="student-laptop"></div>
+            <div class="student-desk"></div>
+        </div>
+    </article>
+
+    <div class="metrics-grid">
+        <article class="metric-card">
+            <div class="metric-icon blue">M</div>
+            <div class="metric-label">Module</div>
+            <div class="metric-value">{{ metrics.modules.value }}</div>
+            <div class="metric-note">{{ metrics.modules.note }}</div>
+        </article>
+        <article class="metric-card">
+            <div class="metric-icon green">A</div>
+            <div class="metric-label">Offene Aufgaben</div>
+            <div class="metric-value">{{ metrics.open_tasks.value }}</div>
+            <div class="metric-note">{{ metrics.open_tasks.note }}</div>
+        </article>
+        <article class="metric-card">
+            <div class="metric-icon orange">!</div>
+            <div class="metric-label">Überfällige Punkte</div>
+            <div class="metric-value">{{ metrics.overdue.value }}</div>
+            <div class="metric-note">{{ metrics.overdue.note }}</div>
+        </article>
+        <article class="metric-card">
+            <div class="metric-icon purple">Z</div>
+            <div class="metric-label">Lernzeit diese Woche</div>
+            <div class="metric-value">{{ metrics.study_time.value }}</div>
+            <div class="metric-note">{{ metrics.study_time.note }}</div>
+        </article>
+    </div>
+</section>
+
+<section class="dashboard-middle">
+    <!-- Left Column: Calendar / Schedule -->
+    <article class="panel">
+        <div class="week-header">
+            <h2>Woche im Überblick</h2>
+            <span class="week-range">{{ week_start|date:"d.m." }} - {{ week_end|date:"d.m.Y" }}</span>
+        </div>
+        <div class="week-days" aria-label="Wochentage">
+            {% for day in week_days %}
+                <div class="week-day{% if day.is_today %} today{% endif %}">
+                    <span class="week-day-label">{{ day.label }}</span>
+                    <span class="week-day-number">{{ day.number }}</span>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="schedule-wrap">
+            <div class="schedule-times" aria-hidden="true">
+                {% for hour in schedule_hours %}
+                    <span>{{ hour }}</span>
+                {% endfor %}
+            </div>
+            <div class="schedule-grid">
+                {% for event in schedule_events %}
+                    <div class="schedule-event {{ event.type }}" style="grid-column: {{ event.day_index }}; grid-row: {{ event.slot_index }};" title="{{ event.title }} ({{ event.time }})">
+                        <div class="schedule-event-title">{{ event.title }}</div>
+                        <span>{{ event.time }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <a class="panel-link" href="{% url 'ui-calendar' %}" style="display: block; margin-top: 24px; font-size: 14px; font-weight: 700; text-align: right;">Zum vollständigen Kalender →</a>
+    </article>
+
+    <!-- Right Column: Stacked Progress and Task Status -->
+    <div class="middle-right-stack">
+        <article class="panel">
+            <div class="panel-heading">
+                <h2>Fortschritt</h2>
+            </div>
+            <div class="progress-row">
+                <div class="progress-label">
+                    <span>Erledigte Aufgaben</span>
+                    <strong>{{ task_completion_percent }}%</strong>
+                </div>
+                <div class="progress-track" aria-hidden="true">
+                    <div class="progress-fill" style="width: {{ task_completion_percent }}%;"></div>
+                </div>
+                <p class="metric-note">{{ summary.tasks.done }} von {{ summary.tasks.total }} Aufgaben erledigt</p>
+            </div>
+            <div class="progress-row">
+                <div class="progress-label">
+                    <span>Lernzeit-Ziel diese Woche</span>
+                    <strong>{{ study_completion_percent }}%</strong>
+                </div>
+                <div class="progress-track" aria-hidden="true">
+                    <div class="progress-fill" style="width: {{ study_completion_percent }}%;"></div>
+                </div>
+                <p class="metric-note">{{ metrics.study_time.value }} von {{ metrics.study_time.note }}</p>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-heading">
+                <h2>Aufgabenstatus</h2>
+                <span class="metric-note">Diese Woche</span>
+            </div>
+            <div class="status-panel">
+                <div class="donut" style="--donut: {{ task_status_conic }};">
+                    <div class="donut-center">
+                        <span>Gesamt</span>
+                        <strong>{{ task_total }}</strong>
+                    </div>
+                </div>
+                <div class="status-list">
+                    {% for row in task_status_rows %}
+                        <div class="status-row">
+                            <span class="status-dot {{ row.key }}"></span>
+                            <span>{{ row.label }}</span>
+                            <span class="status-value">{{ row.value }} ({{ row.percent }}%)</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </article>
+    </div>
+</section>
+
+<section class="dashboard-bottom">
+    <!-- Panel: My Modules -->
+    <article class="panel">
+        <div class="panel-heading">
+            <h2>Meine Module</h2>
+            <a class="panel-link" href="{% url 'ui-module-list' %}">Alle Module</a>
+        </div>
+        {% if module_cards %}
+            <div class="module-grid">
+                {% for module in module_cards %}
+                    <a class="module-tile" href="{% url 'ui-module-detail' module.id %}">
+                        <div class="module-top">
+                            <span class="module-icon">{{ module.name|first|upper }}</span>
+                            <div>
+                                <div class="module-title">{{ module.name }}</div>
+                                <div class="module-subtitle">{{ module.lecturer }}</div>
+                            </div>
+                        </div>
+                        <div class="module-progress">
+                            <div class="progress-track" aria-hidden="true">
+                                <div class="progress-fill" style="width: {{ module.progress }}%;"></div>
+                            </div>
+                            <strong>{{ module.progress }}%</strong>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">Noch keine Module angelegt.</div>
+        {% endif %}
+    </article>
+
+    <!-- Panel: Upcoming Events -->
+    <article class="panel">
+        <div class="panel-heading">
+            <h2>Kommende Termine</h2>
+            <a class="panel-link" href="{% url 'ui-progress' %}">Alle anzeigen</a>
+        </div>
+        {% if events %}
+            <div class="event-list">
+                {% for event in events %}
+                    <div class="event-item">
+                        <div class="event-date {{ event.type }}">
+                            <span>{{ event.date|slice:"8:10" }}</span>
+                            <span>{{ event.date|slice:"5:7" }}</span>
+                        </div>
+                        <div>
+                            <div class="event-title">{{ event.title }}</div>
+                            <div class="event-meta">
+                                {% if event.module_name %}{{ event.module_name }}{% else %}Ohne Modul{% endif %}
+                            </div>
+                        </div>
+                        <span class="badge badge-{{ event.type }}">
+                            {% if event.type == "study_plan" %}
+                                Lernplan
+                            {% elif event.type == "deadline" %}
+                                Prüfung
+                            {% elif event.type == "lecture" %}
+                                Vorlesung
+                            {% else %}
+                                Aufgabe
+                            {% endif %}
+                        </span>
+                        <span class="event-meta event-time">{{ event.time|default:"--" }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+            <a class="panel-link" href="{% url 'ui-progress' %}">Weitere Termine anzeigen</a>
+        {% else %}
+            <div class="empty-state">Keine Termine in den nächsten 14 Tagen.</div>
+        {% endif %}
+    </article>
+
+    <!-- Panel: PDF Documents -->
+    <article class="panel">
+        <div class="panel-heading">
+            <h2>PDF-Unterlagen</h2>
+            <a class="panel-link" href="{% url 'ui-material-list' %}">Alle anzeigen</a>
+        </div>
+        {% if recent_materials %}
+            <div class="file-list">
+                {% for material in recent_materials %}
+                    <div class="file-row">
+                        <span class="file-icon">PDF</span>
+                        <div>
+                            <div class="file-title">{{ material.title }}</div>
+                            <div class="file-meta">{{ material.module_name }} - {{ material.created_at|date:"d.m.Y" }}</div>
+                        </div>
+                        <span class="file-size">{{ material.size }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">Noch keine PDF-Unterlagen hochgeladen.</div>
+        {% endif %}
+        <form class="material-search" action="{% url 'ui-search' %}" method="get">
+            <span aria-hidden="true">⌕</span>
+            <input type="search" name="q" placeholder="Unterlagen durchsuchen..." aria-label="Unterlagen durchsuchen" data-translate-placeholder="search_materials_placeholder">
+        </form>
+    </article>
+</section>
+{% endblock %}

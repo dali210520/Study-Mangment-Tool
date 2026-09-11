@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}{{ module.name }} | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Modul</p>
+        <h1>{{ module.name }}</h1>
+        <p class="muted">
+            {% if module.semester %}{{ module.semester }}{% else %}Ohne Semester{% endif %}
+            {% if module.lecturer %} - {{ module.lecturer }}{% endif %}
+        </p>
+    </div>
+    <div class="page-actions">
+        <a class="secondary-button" href="{% url 'ui-module-list' %}">Zurück</a>
+        <a class="secondary-button" href="{% url 'ui-module-update' module.id %}">Bearbeiten</a>
+        <a class="action-button" href="{% url 'ui-lecture-create' module.id %}">Vorlesung erstellen</a>
+    </div>
+</div>
+
+<section class="detail-grid">
+    <article class="panel">
+        <div class="panel-heading">
+            <h2>Modulinfo</h2>
+        </div>
+        <div class="info-list">
+            <div class="info-row">
+                <span>Dozent</span>
+                <strong>{{ module.lecturer|default:"Nicht hinterlegt" }}</strong>
+            </div>
+            <div class="info-row">
+                <span>Semester</span>
+                <strong>{{ module.semester|default:"Nicht hinterlegt" }}</strong>
+            </div>
+            <div class="info-row">
+                <span>Beschreibung</span>
+                <strong>{{ module.description|default:"Noch keine Beschreibung." }}</strong>
+            </div>
+            <div class="info-row">
+                <span>Verknüpfte Inhalte</span>
+                <strong>{{ task_count }} Aufgaben - {{ deadline_count }} Termine - {{ material_count }} Unterlagen</strong>
+            </div>
+        </div>
+    </article>
+
+    <article class="panel">
+        <div class="panel-heading">
+            <h2>Vorlesungen</h2>
+            <a class="panel-link" href="{% url 'ui-lecture-create' module.id %}">Neue Vorlesung</a>
+        </div>
+        {% if lectures %}
+            <div class="table-list">
+                {% for lecture in lectures %}
+                    <div class="table-row">
+                        <div class="date-pill">{{ lecture.date|date:"d.m.Y" }}</div>
+                        <div>
+                            <div class="resource-title">{{ lecture.title }}</div>
+                            <div class="resource-meta">{{ lecture.notes|default:"Keine Notizen"|truncatechars:110 }}</div>
+                        </div>
+                        <div class="resource-actions">
+                            <a class="secondary-button" href="{% url 'ui-lecture-update' lecture.id %}">Bearbeiten</a>
+                            <a class="danger-link" href="{% url 'ui-lecture-delete' lecture.id %}">Löschen</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">Noch keine Vorlesungen für dieses Modul.</div>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}

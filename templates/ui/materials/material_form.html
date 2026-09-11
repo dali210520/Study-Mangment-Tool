@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }} | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">PDF-Unterlagen</p>
+        <h1>{{ page_title }}</h1>
+        <p class="muted">Lade PDF-Skripte hoch, damit Titel, Seitenzahl und Suchtext gepflegt werden.</p>
+    </div>
+    <div class="page-actions">
+        <a class="secondary-button" href="{% url 'ui-material-list' %}">Abbrechen</a>
+    </div>
+</div>
+
+<form class="form-panel form-grid" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+        <div class="field">
+            {{ field.label_tag }}
+            {{ field }}
+            {{ field.errors }}
+        </div>
+    {% endfor %}
+    <div class="form-actions">
+        <button class="action-button" type="submit">{{ submit_label }}</button>
+        <a class="secondary-button" href="{% url 'ui-material-list' %}">Zurück</a>
+    </div>
+</form>
+{% endblock %}

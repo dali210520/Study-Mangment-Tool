@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Aufgaben | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Aufgabenmanagement</p>
+        <h1>Aufgaben</h1>
+        <p class="muted">Plane, filtere und aktualisiere deine Aufgaben mit wenigen Klicks.</p>
+    </div>
+    <div class="page-actions">
+        <a class="action-button" href="{% url 'ui-task-create' %}">Aufgabe erstellen</a>
+    </div>
+</div>
+
+<section class="stat-strip" aria-label="Aufgaben-Kennzahlen">
+    <div class="stat-card">
+        <strong>{{ task_total }}</strong>
+        <span>Aufgaben gesamt</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ open_count }}</strong>
+        <span>Offen</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ in_progress_count }}</strong>
+        <span>In Bearbeitung</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ done_count }}</strong>
+        <span>Erledigt</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ overdue_count }}</strong>
+        <span>Überfällig</span>
+    </div>
+</section>
+
+<form class="toolbar" method="get">
+    <label class="toolbar-search">
+        <span aria-hidden="true">S</span>
+        <input type="search" name="q" value="{{ query }}" placeholder="Aufgaben durchsuchen..." aria-label="Aufgaben durchsuchen">
+    </label>
+    <select name="status" aria-label="Status filtern">
+        <option value="">Alle Status</option>
+        {% for value, label in status_options %}
+            <option value="{{ value }}"{% if selected_status == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="priority" aria-label="Priorität filtern">
+        <option value="">Alle Prioritäten</option>
+        {% for value, label in priority_options %}
+            <option value="{{ value }}"{% if selected_priority == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="module" aria-label="Modul filtern">
+        <option value="">Alle Module</option>
+        {% for module in modules %}
+            <option value="{{ module.id }}"{% if selected_module == module.id|stringformat:"s" %} selected{% endif %}>{{ module.name }}</option>
+        {% endfor %}
+    </select>
+    <select name="due" aria-label="Fälligkeit filtern">
+        {% for value, label in due_options %}
+            <option value="{{ value }}"{% if selected_due == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button class="secondary-button" type="submit">Filtern</button>
+</form>
+
+{% if tasks %}
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>Aufgabenliste</h2>
+            <span class="metric-note">{{ tasks|length }} angezeigt</span>
+        </div>
+        <div class="table-list">
+            {% for task in tasks %}
+                <div class="table-row task-row{% if task.is_overdue %} overdue{% endif %}">
+                    <div class="date-pill">
+                        {% if task.due_date %}
+                            {{ task.due_date|date:"d.m.Y" }}
+                        {% else %}
+                            Ohne Datum
+                        {% endif %}
+                    </div>
+                    <div class="task-summary">
+                        <div>
+                            <div class="resource-title">{{ task.title }}</div>
+                            <div class="resource-meta">
+                                {% if task.module %}{{ task.module.name }}{% else %}Kein Modul{% endif %}
+                                {% if task.description %} - {{ task.description|truncatechars:120 }}{% endif %}
+                            </div>
+                        </div>
+                        <div class="task-badges">
+                            <span class="status-badge status-{{ task.status }}">{{ task.status_label }}</span>
+                            <span class="priority-badge priority-{{ task.priority }}">{{ task.priority_label }}</span>
+                            {% if task.is_overdue %}
+                                <span class="priority-badge priority-high">Überfällig</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="resource-actions">
+                        {% if task.status != "open" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-task-status' task.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="open">
+                                <button class="secondary-button" type="submit">Offen</button>
+                            </form>
+                        {% endif %}
+                        {% if task.status != "in_progress" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-task-status' task.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="in_progress">
+                                <button class="secondary-button" type="submit">Starten</button>
+                            </form>
+                        {% endif %}
+                        {% if task.status != "done" %}
+                            <form class="quick-status-form" method="post" action="{% url 'ui-task-status' task.id %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="done">
+                                <button class="secondary-button" type="submit">Erledigt</button>
+                            </form>
+                        {% endif %}
+                        <a class="secondary-button" href="{% url 'ui-task-update' task.id %}">Bearbeiten</a>
+                        <a class="danger-link" href="{% url 'ui-task-delete' task.id %}">Löschen</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+{% else %}
+    <div class="empty-state">Noch keine Aufgaben gefunden.</div>
+{% endif %}
+{% endblock %}

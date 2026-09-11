@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Fortschritt | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">Fortschritt</p>
+        <h1>Fortschritt</h1>
+        <p class="muted">Sieh auf einen Blick, wie Aufgaben, Termine und Lernzeit vorankommen.</p>
+    </div>
+</div>
+
+<section class="stat-strip" aria-label="Fortschritt-Kennzahlen">
+    <div class="stat-card">
+        <strong>{{ summary.modules.total }}</strong>
+        <span>Module</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ summary.tasks.done }}/{{ summary.tasks.total }}</strong>
+        <span>Aufgaben erledigt</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ summary.deadlines.overdue }}</strong>
+        <span>Überfällige Termine</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ summary.study_plans.completed_minutes }}</strong>
+        <span>erledigte Lernminuten</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ summary.study_plans.planned_minutes }}</strong>
+        <span>geplante Lernminuten</span>
+    </div>
+</section>
+
+<div class="dashboard-grid">
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>Aufgabenstatus</h2>
+            <span class="metric-note">{{ task_done_percent }} % erledigt</span>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label">
+                <span>Erledigt</span>
+                <strong>{{ summary.tasks.done }}</strong>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width: {{ task_done_percent }}%;"></div>
+            </div>
+        </div>
+        <div class="status-list">
+            <div class="status-row"><span class="status-dot open"></span><span>Offen</span><strong>{{ summary.tasks.open }}</strong></div>
+            <div class="status-row"><span class="status-dot progress"></span><span>In Bearbeitung</span><strong>{{ summary.tasks.in_progress }}</strong></div>
+            <div class="status-row"><span class="status-dot done"></span><span>Erledigt</span><strong>{{ summary.tasks.done }}</strong></div>
+            <div class="status-row"><span class="status-dot overdue"></span><span>Überfällig</span><strong>{{ summary.tasks.overdue }}</strong></div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>Lernzeit</h2>
+            <span class="metric-note">{{ study_done_percent }} % erledigt</span>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label">
+                <span>Lernminuten</span>
+                <strong>{{ summary.study_plans.completed_minutes }}/{{ summary.study_plans.planned_minutes }}</strong>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width: {{ study_done_percent }}%;"></div>
+            </div>
+        </div>
+        <div class="status-list">
+            <div class="status-row"><span class="status-dot open"></span><span>Geplant</span><strong>{{ summary.study_plans.planned }}</strong></div>
+            <div class="status-row"><span class="status-dot progress"></span><span>In Bearbeitung</span><strong>{{ summary.study_plans.in_progress }}</strong></div>
+            <div class="status-row"><span class="status-dot done"></span><span>Erledigt</span><strong>{{ summary.study_plans.done }}</strong></div>
+            <div class="status-row"><span class="status-dot overdue"></span><span>Übersprungen</span><strong>{{ summary.study_plans.skipped }}</strong></div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <h2>Termine</h2>
+            <span class="metric-note">{{ deadline_done_percent }} % erledigt</span>
+        </div>
+        <div class="progress-row">
+            <div class="progress-label">
+                <span>Abgaben & Prüfungen</span>
+                <strong>{{ summary.deadlines.completed }}/{{ summary.deadlines.total }}</strong>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" style="width: {{ deadline_done_percent }}%;"></div>
+            </div>
+        </div>
+        <div class="status-list">
+            <div class="status-row"><span class="status-dot progress"></span><span>Anstehend</span><strong>{{ summary.deadlines.upcoming }}</strong></div>
+            <div class="status-row"><span class="status-dot done"></span><span>Erledigt</span><strong>{{ summary.deadlines.completed }}</strong></div>
+            <div class="status-row"><span class="status-dot overdue"></span><span>Überfällig</span><strong>{{ summary.deadlines.overdue }}</strong></div>
+            <div class="status-row"><span class="status-dot open"></span><span>Abgebrochen</span><strong>{{ summary.deadlines.cancelled }}</strong></div>
+        </div>
+    </section>
+</div>
+
+<section class="panel section-gap">
+    <div class="panel-heading">
+        <h2>Kommende Punkte</h2>
+        <span class="metric-note">nächste 14 Tage</span>
+    </div>
+    {% if upcoming_events %}
+        <div class="event-list">
+            {% for event in upcoming_events %}
+                <div class="event-item">
+                    <div class="event-date {{ event.type }}">{{ event.date|slice:"8:10" }}<span>{{ event.date|slice:"5:7" }}</span></div>
+                    <div>
+                        <div class="event-title">{{ event.title }}</div>
+                        <div class="event-meta">{{ event.module_name|default:"Kein Modul" }}</div>
+                    </div>
+                    <span class="badge badge-{{ event.type }}">{{ event.label }}</span>
+                    <span class="event-time">{{ event.status|default:"" }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">Keine kommenden Punkte gefunden.</div>
+    {% endif %}
+</section>
+{% endblock %}

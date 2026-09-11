@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}PDF-Unterlagen | Study Management Tool{% endblock %}
+
+{% block content %}
+<div class="page-intro">
+    <div>
+        <p class="eyebrow">PDF-Unterlagen</p>
+        <h1>PDF-Unterlagen</h1>
+        <p class="muted">Verwalte deine Skripte und durchsuche extrahierte Inhalte über die Suche.</p>
+    </div>
+    <div class="page-actions">
+        <a class="secondary-button" href="{% url 'ui-search' %}">PDF-Suche</a>
+        <a class="action-button" href="{% url 'ui-material-create' %}">PDF hochladen</a>
+    </div>
+</div>
+
+<section class="stat-strip" aria-label="PDF-Kennzahlen">
+    <div class="stat-card">
+        <strong>{{ material_total }}</strong>
+        <span>Unterlagen</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ page_total }}</strong>
+        <span>extrahierte Seiten</span>
+    </div>
+    <div class="stat-card">
+        <strong>{{ query|default:"-" }}</strong>
+        <span>aktuelle Suche</span>
+    </div>
+</section>
+
+<form class="toolbar" method="get">
+    <label class="toolbar-search">
+        <span aria-hidden="true">S</span>
+        <input type="search" name="q" value="{{ query }}" placeholder="PDF-Metadaten durchsuchen..."
+            aria-label="PDF-Unterlagen durchsuchen">
+    </label>
+    <select name="module" aria-label="Modul filtern">
+        <option value="">Alle Module</option>
+        {% for module in modules %}
+        <option value="{{ module.id }}" {% if selected_module == module.id|stringformat:"s" %} selected{% endif %}>{{
+            module.name }}</option>
+        {% endfor %}
+    </select>
+    <button class="secondary-button" type="submit">Filtern</button>
+</form>
+
+{% if materials %}
+<section class="resource-grid" aria-label="PDF-Unterlagen">
+    {% for material in materials %}
+    <article class="resource-card">
+        <div class="resource-card-header">
+            <span class="resource-icon">PDF</span>
+            <div>
+                <div class="resource-title">{{ material.title }}</div>
+                <div class="resource-meta">{{ material.module.name }} - {{ material.original_filename }}</div>
+            </div>
+        </div>
+        <p class="resource-description">
+            {{ material.page_count }} Seiten extrahiert. Hinzugefügt am {{ material.created_at|date:"d.m.Y" }}.
+        </p>
+        <div class="resource-actions">
+            {% if material.file %}
+            <a class="secondary-button" href="{{ material.file.url }}">Öffnen</a>
+            {% endif %}
+            <a class="secondary-button" href="{% url 'ui-material-update' material.id %}">Bearbeiten</a>
+            <a class="danger-link" href="{% url 'ui-material-delete' material.id %}">Löschen</a>
+        </div>
+    </article>
+    {% endfor %}
+</section>
+{% else %}
+<div class="empty-state">Noch keine PDF-Unterlagen gefunden.</div>
+{% endif %}
+{% endblock %}
